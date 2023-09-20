@@ -1,5 +1,23 @@
 import { useState } from "react";
 
+const Anecdote = ({ title, anecdote, votes }) => {
+  return (
+    <>
+      <h2>{title}</h2>
+      <p>{anecdote}</p>
+      <p>Has {votes} votes</p>
+    </>
+  );
+};
+
+const MyButtons = ({ handleClick, text }) => {
+  return (
+    <>
+      <button onClick={handleClick}>{text}</button>
+    </>
+  );
+};
+
 const App = () => {
   const anecdotes = [
     "If it hurts, do it more often.",
@@ -17,6 +35,7 @@ const App = () => {
 
   const [selected, setSelected] = useState(randomNumber());
   const [points, setPoints] = useState(new Array(anecdotes.length).fill(0));
+  const [popular, setPopular] = useState(null);
 
   const nextAnecdote = () => {
     const newRandomNumber = randomNumber();
@@ -30,13 +49,28 @@ const App = () => {
     const pointsCopy = [...points];
     pointsCopy[selected] += 1;
     setPoints(pointsCopy);
+    if (pointsCopy[selected] > points[popular] || !popular) {
+      setPopular(selected);
+    }
   };
 
   return (
     <div>
-      <p>{anecdotes[selected]}</p>
-      <button onClick={nextAnecdote}>Next anecdote</button>
-      <button onClick={vote}>Vote</button>
+      <Anecdote
+        title="Anecdote of the day"
+        anecdote={anecdotes[selected]}
+        votes={points[selected]}
+      />
+      <MyButtons handleClick={() => nextAnecdote()} text="Next anecdote" />
+      <MyButtons handleClick={() => vote()} text="Vote" />
+      {/* Render only if there've been any vote */}
+      {popular && (
+        <Anecdote
+          title="Anecdote with most votes"
+          anecdote={anecdotes[popular]}
+          votes={points[popular]}
+        />
+      )}
     </div>
   );
 };
