@@ -11,9 +11,12 @@ const MyButton = ({ handleClick, text }) => {
 const StatisticLine = ({ text, statistic }) => {
   return (
     <>
-      <p>
-        {text}: {statistic} {text === "Positive" ? " %" : ""}
-      </p>
+      <tr>
+        <td>{text}</td>
+        <td>
+          {statistic} {text === "Positive" ? " %" : ""}
+        </td>
+      </tr>
     </>
   );
 };
@@ -36,12 +39,16 @@ const Statistics = ({ feedback }) => {
   return (
     <>
       <h2>Statistics</h2>
-      <StatisticLine text="Good" statistic={good} />
-      <StatisticLine text="Neutral" statistic={neutral} />
-      <StatisticLine text="Bad" statistic={bad} />
-      <StatisticLine text="All" statistic={total} />
-      <StatisticLine text="Average" statistic={average()} />
-      <StatisticLine text="Positive" statistic={positive()} />
+      <table>
+        <tbody>
+          <StatisticLine text="Good" statistic={good} />
+          <StatisticLine text="Neutral" statistic={neutral} />
+          <StatisticLine text="Bad" statistic={bad} />
+          <StatisticLine text="All" statistic={total} />
+          <StatisticLine text="Average" statistic={average()} />
+          <StatisticLine text="Positive" statistic={positive()} />
+        </tbody>
+      </table>
     </>
   );
 };
