@@ -1,12 +1,12 @@
-import Header from "./Header.jsx";
+import CourseHeader from "./CourseHeader.jsx";
 import Content from "./Content.jsx";
 
 const Course = ({ course }) => {
   return (
-    <>
-      <Header title={course.name} />
+    <div>
+      <CourseHeader title={course.name} />
       <Content parts={course.parts} />
-    </>
+    </div>
   );
 };
 
