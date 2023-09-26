@@ -10,7 +10,7 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterName, setFilterName] = useState("");
-  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notification, setNotification] = useState({});
 
   // Retrieve data from the JSON database, only the first time the page renders
   useEffect(() => {
@@ -37,9 +37,12 @@ const App = () => {
         setPersons(persons.concat(returnedPerson));
         setNewName("");
         setNewNumber("");
-        setNotificationMessage(`${newPerson.name} was added`);
+        setNotification({
+          message: `${newPerson.name} was added`,
+          error: false,
+        });
         setTimeout(() => {
-          setNotificationMessage(null);
+          setNotification({});
         }, 5000);
       });
     }
@@ -49,7 +52,16 @@ const App = () => {
     if (window.confirm(`Delete ${person.name} ?`)) {
       phonebookService
         .remove(person.id)
-        .then(() => setPersons(persons.filter((p) => p.id !== person.id)));
+        .then(() => setPersons(persons.filter((p) => p.id !== person.id)))
+        .catch(() => {
+          setNotification({
+            message: `Information of ${person.name} has already been removed from the server`,
+            error: true,
+          });
+          setTimeout(() => {
+            setNotification({});
+          }, 5000);
+        });
     }
   };
 
@@ -68,19 +80,30 @@ const App = () => {
           );
           setNewName("");
           setNewNumber("");
-          setNotificationMessage(`${person.name}'s number was changed`);
+          setNotification({
+            message: `${person.name}'s number was changed`,
+            error: false,
+          });
           setTimeout(() => {
-            setNotificationMessage(null);
+            setNotification({});
           }, 5000);
         })
-        .catch((error) => console.log(error));
+        .catch(() => {
+          setNotification({
+            message: `Information of ${person.name} has already been removed from the server`,
+            error: true,
+          });
+          setTimeout(() => {
+            setNotification({});
+          }, 5000);
+        });
     }
   };
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={notificationMessage} />
+      <Notification notification={notification} />
       <Filter filterName={filterName} handleChange={handleFilterChange} />
       <h2>Add a new</h2>
       <PersonForm
