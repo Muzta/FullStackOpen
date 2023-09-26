@@ -5,8 +5,12 @@ const getAll = () => {
   return axios.get(baseUrl).then((response) => response.data);
 };
 
-const create = (newPhonebook) => {
-  return axios.post(baseUrl, newPhonebook).then((response) => response.data);
+const create = (person) => {
+  return axios.post(baseUrl, person).then((response) => response.data);
 };
 
-export default { getAll, create };
+const remove = (personId) => {
+  return axios.delete(`${baseUrl}/${personId}`);
+};
+
+export default { getAll, create, remove };
