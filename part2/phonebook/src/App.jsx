@@ -3,12 +3,14 @@ import phonebookService from "./services/phonebook";
 import PersonForm from "./components/PersonForm";
 import Filter from "./components/Filter.jsx";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterName, setFilterName] = useState("");
+  const [notificationMessage, setNotificationMessage] = useState("");
 
   // Retrieve data from the JSON database, only the first time the page renders
   useEffect(() => {
@@ -35,6 +37,10 @@ const App = () => {
         setPersons(persons.concat(returnedPerson));
         setNewName("");
         setNewNumber("");
+        setNotificationMessage(`${newPerson.name} was added`);
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 5000);
       });
     }
   };
@@ -54,19 +60,27 @@ const App = () => {
       )
     ) {
       const newPerson = { ...person, number: newNumber };
-      phonebookService.update(person.id, newPerson).then((returnedPerson) => {
-        setPersons(
-          persons.map((p) => (p.name !== person.name ? p : returnedPerson))
-        );
-        setNewName("");
-        setNewNumber("");
-      });
+      phonebookService
+        .update(person.id, newPerson)
+        .then((returnedPerson) => {
+          setPersons(
+            persons.map((p) => (p.name !== person.name ? p : returnedPerson))
+          );
+          setNewName("");
+          setNewNumber("");
+          setNotificationMessage(`${person.name}'s number was changed`);
+          setTimeout(() => {
+            setNotificationMessage(null);
+          }, 5000);
+        })
+        .catch((error) => console.log(error));
     }
   };
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notificationMessage} />
       <Filter filterName={filterName} handleChange={handleFilterChange} />
       <h2>Add a new</h2>
       <PersonForm
