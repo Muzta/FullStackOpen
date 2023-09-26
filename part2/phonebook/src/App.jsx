@@ -21,10 +21,11 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault();
-    const alreadyExist = () =>
-      persons.filter((p) => p.name === newName).length > 0;
+    const existingPerson = persons.find((person) => person.name === newName);
 
-    if (!alreadyExist()) {
+    if (existingPerson) {
+      updatePersonNumber(existingPerson);
+    } else {
       const newPerson = {
         name: newName,
         number: newNumber,
@@ -35,8 +36,6 @@ const App = () => {
         setNewName("");
         setNewNumber("");
       });
-    } else {
-      alert(`${newName} is already added to the phonebook`);
     }
   };
 
@@ -45,6 +44,23 @@ const App = () => {
       phonebookService
         .remove(person.id)
         .then(() => setPersons(persons.filter((p) => p.id !== person.id)));
+    }
+  };
+
+  const updatePersonNumber = (person) => {
+    if (
+      window.confirm(
+        `${person.name} is already in the phonebook, replace the old number with this new one?`
+      )
+    ) {
+      const newPerson = { ...person, number: newNumber };
+      phonebookService.update(person.id, newPerson).then((returnedPerson) => {
+        setPersons(
+          persons.map((p) => (p.name !== person.name ? p : returnedPerson))
+        );
+        setNewName("");
+        setNewNumber("");
+      });
     }
   };
 
