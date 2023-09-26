@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import phonebookService from "./services/phonebook";
 import PersonForm from "./components/PersonForm";
 import Filter from "./components/Filter.jsx";
 import Persons from "./components/Persons";
@@ -12,9 +12,7 @@ const App = () => {
 
   // Retrieve data from the JSON database, only the first time the page renders
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then((response) => setPersons(response.data));
+    phonebookService.getAll().then((response) => setPersons(response));
   }, []);
 
   const handleNameChange = (event) => setNewName(event.target.value);
@@ -31,9 +29,12 @@ const App = () => {
         name: newName,
         number: newNumber,
       };
-      setPersons(persons.concat(newPerson));
-      setNewName("");
-      setNewNumber("");
+
+      phonebookService.create(newPerson).then((returnedPerson) => {
+        setPersons(persons.concat(returnedPerson));
+        setNewName("");
+        setNewNumber("");
+      });
     } else {
       alert(`${newName} is already added to the phonebook`);
     }
