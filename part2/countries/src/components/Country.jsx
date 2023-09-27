@@ -1,4 +1,11 @@
-const Country = ({ country, showData = false, handleShowCountry = null }) => {
+import Capital from "./Capital";
+
+const Country = ({
+  country,
+  showData = false,
+  handleShowCountry = null,
+  capitalWeatherData = null,
+}) => {
   // If there's only a country in the filter, retrieve all its data
   if (showData) {
     return (
@@ -16,6 +23,10 @@ const Country = ({ country, showData = false, handleShowCountry = null }) => {
           ))}
         </ul>
         <img src={country.flags.png} alt={country.flags.alt} />
+        <Capital
+          name={country.capital[0]}
+          capitalWeatherData={capitalWeatherData}
+        />
       </>
     );
   }
