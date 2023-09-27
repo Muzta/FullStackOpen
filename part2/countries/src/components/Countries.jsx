@@ -1,24 +1,24 @@
 import Country from "./Country";
 
-const Countries = ({ countries, filterCountry }) => {
-  const filteredCountries = countries.filter((country) =>
-    country.name.common.toLowerCase().includes(filterCountry.toLowerCase())
-  );
-
-  if (filteredCountries.length > 10) {
+const Countries = ({ countries, handleShowCountry }) => {
+  if (countries.length === 0 || countries.length > 10) {
     return <div>Too many matches, specify another filter</div>;
-  } else if (filteredCountries.length === 1) {
+  } else if (countries.length === 1) {
     return (
       <div>
         {/* Get the first element (only element) of the array */}
-        <Country country={filteredCountries.find(() => true)} data={true} />
+        <Country country={countries.find(() => true)} showData={true} />
       </div>
     );
   } else {
     return (
       <div>
-        {filteredCountries.map((country) => (
-          <Country key={countries.indexOf(country)} country={country} />
+        {countries.map((country, index) => (
+          <Country
+            key={index}
+            country={country}
+            handleShowCountry={handleShowCountry}
+          />
         ))}
       </div>
     );

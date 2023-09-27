@@ -6,6 +6,7 @@ import Countries from "./components/Countries";
 const App = () => {
   const [countries, setCountries] = useState([]);
   const [filterCountry, setFilterCountry] = useState("");
+  const [countriesToShow, setCountriesToShow] = useState([]);
 
   useEffect(() => {
     axios
@@ -13,13 +14,28 @@ const App = () => {
       .then((response) => setCountries(response.data));
   }, []);
 
-  const handleFilterChange = (event) => setFilterCountry(event.target.value);
+  const handleFilterChange = (event) => {
+    const filter = event.target.value;
+    setFilterCountry(filter);
+    setCountriesToShow(
+      countries.filter((country) =>
+        country.name.common.toLowerCase().includes(filter.toLowerCase())
+      )
+    );
+  };
+
+  const handleShowCountry = (country) => {
+    setCountriesToShow([country]);
+  };
 
   return (
     <div>
       <h2>Countries</h2>
       <Filter filterCountry={filterCountry} handleChange={handleFilterChange} />
-      <Countries countries={countries} filterCountry={filterCountry} />
+      <Countries
+        countries={countriesToShow}
+        handleShowCountry={handleShowCountry}
+      />
     </div>
   );
 };

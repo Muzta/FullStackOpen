@@ -1,6 +1,6 @@
-const Country = ({ country, data = false }) => {
+const Country = ({ country, showData = false, handleShowCountry = null }) => {
   // If there's only a country in the filter, retrieve all its data
-  if (data) {
+  if (showData) {
     return (
       <>
         <h3>{country.name.common}</h3>
@@ -20,7 +20,12 @@ const Country = ({ country, data = false }) => {
     );
   }
 
-  return <p>{country.name.common}</p>;
+  return (
+    <p>
+      {country.name.common}{" "}
+      <button onClick={() => handleShowCountry(country)}>Show</button>
+    </p>
+  );
 };
 
 export default Country;
