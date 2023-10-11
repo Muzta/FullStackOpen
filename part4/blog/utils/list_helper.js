@@ -28,9 +28,28 @@ const mostBlogs = (blogs) => {
   //   Make a list of pairs Author: blogs, and get the object with the highest [1] (num of blogs) property
   const topAuthor = lodash.maxBy(
     lodash.toPairs(blogsPerAuthor),
-    (blog) => blog[1]
+    (pair) => pair[1]
   );
   return { author: topAuthor[0], blogs: topAuthor[1] };
 };
 
-module.exports = { dummy, totalLikes, favoriteBlog, mostBlogs };
+const mostLikes = (blogs) => {
+  if (blogs.length === 0) return null;
+
+  const blogsModifed = blogs.map((blog) => ({
+    author: blog.author,
+    likes: blog.likes,
+  }));
+  const blogsByAuthor = lodash.groupBy(blogsModifed, "author");
+  const likesByAuthor = lodash.mapValues(blogsByAuthor, (list) =>
+    lodash.sumBy(list, "likes")
+  );
+  const topAuthor = lodash.maxBy(
+    lodash.toPairs(likesByAuthor),
+    (pair) => pair[1]
+  );
+
+  return topAuthor;
+};
+
+module.exports = { dummy, totalLikes, favoriteBlog, mostBlogs, mostLikes };
