@@ -22,6 +22,12 @@ test("List of blogs is returned as JSON", async () => {
   expect(response.body).toHaveLength(helper.initialBlogs.length);
 });
 
+test("Unique identifier property is called 'id'", async () => {
+  const response = (await api.get("/api/blogs")).body;
+  console.log("Prueba", response[0]);
+  expect(response[0].id).toBeDefined();
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
