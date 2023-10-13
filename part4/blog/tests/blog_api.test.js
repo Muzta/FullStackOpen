@@ -91,6 +91,23 @@ describe("Creating a new blog post", () => {
   });
 });
 
+describe("Deletion of a blog post", () => {
+  test("succeeds with code 204 if id is valid", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const blogToDelete = startingBlogs[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length - 1);
+
+    const startingBlogTitles = startingBlogs.map((blog) => blog.title);
+    const endingBlogTitles = endingBlogs.map((blog) => blog.title);
+    expect(startingBlogTitles).toContain(blogToDelete.title);
+    expect(endingBlogTitles).not.toContain(blogToDelete.title);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
