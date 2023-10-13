@@ -28,6 +28,25 @@ test("Unique identifier property is called 'id'", async () => {
   expect(response[0].id).toBeDefined();
 });
 
+test("Create a new blog post", async () => {
+  const newBlog = {
+    title: "Test blog",
+    author: "unknown",
+    url: "http://test.com",
+    likes: 3,
+  };
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const blogsAtEnd = await helper.blogsInDb();
+  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
+  const titles = blogsAtEnd.map((blog) => blog.title);
+  expect(titles).toContainEqual(newBlog.title);
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });

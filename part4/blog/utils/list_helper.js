@@ -16,7 +16,6 @@ const favoriteBlog = (blogs) => {
     blogs[0]
   );
   const { title, author, likes } = blog;
-  console.log("Propiedades", { title, author, likes });
 
   return { title, author, likes };
 };
