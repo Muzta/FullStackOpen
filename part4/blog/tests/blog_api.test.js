@@ -63,6 +63,32 @@ describe("Creating a new blog post", () => {
     expect(blogMissingLikes.likes).toBeUndefined();
     expect(response.body.likes).toEqual(0);
   });
+
+  test("without title property throws 400", async () => {
+    const blogMissingTitle = newBlog;
+    delete blogMissingTitle.title;
+
+    const response = await api
+      .post("/api/blogs")
+      .send(blogMissingTitle)
+      .expect(400);
+
+    expect(response.body.error).toBe("Title or url missed");
+    expect(await helper.blogsInDb()).toHaveLength(helper.initialBlogs.length);
+  });
+
+  test("without url property throws 400", async () => {
+    const blogMissingURL = newBlog;
+    delete blogMissingURL.url;
+
+    const response = await api
+      .post("/api/blogs")
+      .send(blogMissingURL)
+      .expect(400);
+
+    expect(response.body.error).toBe("Title or url missed");
+    expect(await helper.blogsInDb()).toHaveLength(helper.initialBlogs.length);
+  });
 });
 
 afterAll(async () => {

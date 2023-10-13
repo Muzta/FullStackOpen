@@ -8,6 +8,8 @@ blogsRouter.get("/", async (request, response) => {
 
 blogsRouter.post("/", async (request, response) => {
   const body = request.body;
+  if (!body.title || !body.url)
+    return response.status(400).json({ error: "Title or url missed" });
   // If likes is undefined, default 0
   const blog = new Blog({ likes: 0, ...body });
   const result = await blog.save();
