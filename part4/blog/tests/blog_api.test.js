@@ -24,27 +24,45 @@ test("List of blogs is returned as JSON", async () => {
 
 test("Unique identifier property is called 'id'", async () => {
   const response = (await api.get("/api/blogs")).body;
-  console.log("Prueba", response[0]);
   expect(response[0].id).toBeDefined();
 });
 
-test("Create a new blog post", async () => {
+describe("Creating a new blog post", () => {
   const newBlog = {
     title: "Test blog",
     author: "unknown",
     url: "http://test.com",
     likes: 3,
   };
-  await api
-    .post("/api/blogs")
-    .send(newBlog)
-    .expect(201)
-    .expect("Content-Type", /application\/json/);
 
-  const blogsAtEnd = await helper.blogsInDb();
-  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
-  const titles = blogsAtEnd.map((blog) => blog.title);
-  expect(titles).toContainEqual(newBlog.title);
+  const makeCorrectPostRequest = async (api, data) => {
+    const response = await api
+      .post("/api/blogs")
+      .send(data)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
+    const titles = blogsAtEnd.map((blog) => blog.title);
+    expect(titles).toContainEqual(newBlog.title);
+    return response;
+  };
+
+  test("works", async () => {
+    const response = await makeCorrectPostRequest(api, newBlog);
+    expect(response).toBeDefined();
+  });
+
+  test("with likes property missing, default 0", async () => {
+    const blogMissingLikes = newBlog;
+    delete blogMissingLikes.likes;
+
+    const response = await makeCorrectPostRequest(api, blogMissingLikes);
+    expect(response.body).toBeDefined();
+    expect(blogMissingLikes.likes).toBeUndefined();
+    expect(response.body.likes).toEqual(0);
+  });
 });
 
 afterAll(async () => {
