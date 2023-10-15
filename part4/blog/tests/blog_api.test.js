@@ -92,7 +92,7 @@ describe("Creating a new blog post", () => {
 });
 
 describe("Deletion of a blog post", () => {
-  test("succeeds with code 204 if id is valid", async () => {
+  test("succeeds with code 204 if id is valid and in db", async () => {
     const startingBlogs = await helper.blogsInDb();
     const blogToDelete = startingBlogs[0];
 
@@ -105,6 +105,32 @@ describe("Deletion of a blog post", () => {
     const endingBlogTitles = endingBlogs.map((blog) => blog.title);
     expect(startingBlogTitles).toContain(blogToDelete.title);
     expect(endingBlogTitles).not.toContain(blogToDelete.title);
+  });
+
+  test("succeeds with code 204 if id is valid but not in db", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const existingId = startingBlogs[0].id;
+    const inventedId = existingId.slice(0, -3) + "000";
+    console.log("ID Existe", existingId, "inventado", inventedId);
+
+    await api.delete(`/api/blogs/${inventedId}`).expect(204);
+
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+  });
+
+  test("error if id has an invalid format", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const existingId = startingBlogs[0].id;
+    const malformattedId = existingId.slice(0, -2);
+
+    const response = await api
+      .delete(`/api/blogs/${malformattedId}`)
+      .expect(400);
+    expect(response.body.error).toBe("Malformatted id");
+
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
   });
 });
 
