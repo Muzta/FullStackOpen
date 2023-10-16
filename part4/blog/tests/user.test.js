@@ -15,14 +15,14 @@ beforeEach(async () => {
 });
 
 describe("Creation of new user when there is initially one", () => {
+  const newUser = {
+    username: "mluukkai",
+    name: "Matti Luukkainen",
+    password: "salainen",
+  };
+
   test("succeeds with a fresh username", async () => {
     const usersAtStart = await helper.usersInDb();
-
-    const newUser = {
-      username: "mluukkai",
-      name: "Matti Luukkainen",
-      password: "salainen",
-    };
 
     await api
       .post("/api/users")
@@ -35,6 +35,40 @@ describe("Creation of new user when there is initially one", () => {
 
     const usernames = usersAtEnd.map((u) => u.username);
     expect(usernames).toContain(newUser.username);
+  });
+
+  test("error 400 when password given is shorter than 3 characters", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const errorUser = { ...newUser, password: newUser.password.slice(0, 2) };
+
+    const response = await api.post("/api/users/").send(errorUser).expect(400);
+    expect(response.body.error).toBe(
+      "Password must be at least 3 characters long"
+    );
+
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toEqual(usersAtStart);
+
+    const usernames = usersAtEnd.map((u) => u.username);
+    expect(usernames).not.toContain(errorUser.username);
+  });
+
+  test("error 400 when password is not given", async () => {
+    const usersAtStart = await helper.usersInDb();
+
+    const errorUser = { ...newUser, password: undefined };
+
+    const response = await api.post("/api/users/").send(errorUser).expect(400);
+    expect(response.body.error).toBe(
+      "Password must be at least 3 characters long"
+    );
+
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toEqual(usersAtStart);
+
+    const usernames = usersAtEnd.map((u) => u.username);
+    expect(usernames).not.toContain(errorUser.username);
   });
 });
 
