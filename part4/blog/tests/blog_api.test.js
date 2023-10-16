@@ -134,6 +134,26 @@ describe("Deletion of a blog post", () => {
   });
 });
 
+describe("Updating a blog post", () => {
+  const { title, author, url, likes, _id } = helper.initialBlogs[0];
+  const blogToUpdate = { title, author, url, likes };
+
+  test("works", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    blogToUpdate.likes++;
+    await api
+      .put(`/api/blogs/${_id}`)
+      .send(blogToUpdate)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+    expect(startingBlogs.find((blog) => blog.id === _id).likes).toBe(likes);
+    expect(endingBlogs.find((blog) => blog.id === _id).likes).toBe(likes + 1);
+  });
+});
+
 afterAll(async () => {
   await mongoose.connection.close();
 });
