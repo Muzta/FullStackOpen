@@ -111,7 +111,6 @@ describe("Deletion of a blog post", () => {
     const startingBlogs = await helper.blogsInDb();
     const existingId = startingBlogs[0].id;
     const inventedId = existingId.slice(0, -3) + "000";
-    console.log("ID Existe", existingId, "inventado", inventedId);
 
     await api.delete(`/api/blogs/${inventedId}`).expect(204);
 
@@ -136,11 +135,11 @@ describe("Deletion of a blog post", () => {
 
 describe("Updating a blog post", () => {
   const { title, author, url, likes, _id } = helper.initialBlogs[0];
-  const blogToUpdate = { title, author, url, likes };
+  const blogToUpdateProperties = { title, author, url, likes };
 
-  test("works", async () => {
+  test("succeeds with code 200", async () => {
     const startingBlogs = await helper.blogsInDb();
-    blogToUpdate.likes++;
+    const blogToUpdate = { ...blogToUpdateProperties, likes: likes + 1 };
     await api
       .put(`/api/blogs/${_id}`)
       .send(blogToUpdate)
@@ -151,6 +150,55 @@ describe("Updating a blog post", () => {
     expect(endingBlogs).toHaveLength(startingBlogs.length);
     expect(startingBlogs.find((blog) => blog.id === _id).likes).toBe(likes);
     expect(endingBlogs.find((blog) => blog.id === _id).likes).toBe(likes + 1);
+  });
+
+  test("succeeds with code 200 and keep original attributes even when not passed", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const blogToUpdate = {
+      ...blogToUpdateProperties,
+      title: undefined,
+      url: undefined,
+      likes: likes + 1,
+    };
+
+    await api
+      .put(`/api/blogs/${_id}`)
+      .send(blogToUpdate)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+
+    const previousBlog = startingBlogs.find((blog) => blog.id === _id);
+    const updatedBlog = endingBlogs.find((blog) => blog.id === _id);
+    expect(previousBlog.likes).toBe(likes);
+    expect(updatedBlog.likes).toBe(likes + 1);
+    expect(updatedBlog.title && updatedBlog.url).toBeDefined();
+  });
+
+  test("succeeds with code 200 if id is valid but not in db", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const existingId = startingBlogs[0].id;
+    const inventedId = existingId.slice(0, -3) + "000";
+
+    const response = await api
+      .put(`/api/blogs/${inventedId}`)
+      .send(blogToUpdateProperties)
+      .expect(200);
+    expect(response.body).toBeNull();
+  });
+
+  test("error 400 if id has an invalid format", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const existingId = startingBlogs[0].id;
+    const malformattedId = existingId.slice(0, -2);
+
+    const response = await api
+      .put(`/api/blogs/${malformattedId}`)
+      .send(blogToUpdateProperties)
+      .expect(400);
+    expect(response.body.error).toBe("Malformatted id");
   });
 });
 
