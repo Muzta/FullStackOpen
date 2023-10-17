@@ -102,6 +102,22 @@ describe("Creation of new user when there is initially one", () => {
     const usernames = usersAtEnd.map((u) => u.username);
     expect(usernames).not.toContain(errorUser.username);
   });
+
+  test("error 400 when username is already taken", async () => {
+    await api.post("/api/users").send(newUser).expect(201);
+    const usersAtStart = await helper.usersInDb();
+
+    const repeatedUser = { ...newUser, name: "New one" };
+
+    const response = await api
+      .post("/api/users")
+      .send(repeatedUser)
+      .expect(400);
+    expect(response.body.error).toContain("expected `username` to be unique");
+
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toEqual(usersAtStart);
+  });
 });
 
 afterAll(async () => {
