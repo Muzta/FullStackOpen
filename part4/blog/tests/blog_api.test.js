@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const app = require("../app");
 const supertest = require("supertest");
 const helper = require("./test_helper");
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 const api = supertest(app);
 
@@ -10,6 +12,11 @@ beforeEach(async () => {
   await Blog.deleteMany({});
   const blogsToInsert = helper.initialBlogs.map((blog) => new Blog(blog));
   await Blog.insertMany(blogsToInsert);
+
+  await User.deleteMany({});
+  const passwordHash = await bcrypt.hash("testingPassword", 10);
+  const user = new User({ username: "root", name: "test", passwordHash });
+  await user.save();
 });
 
 test("List of blogs is returned as JSON", async () => {
@@ -55,7 +62,7 @@ describe("Creating a new blog post", () => {
   });
 
   test("with likes property missing, default 0", async () => {
-    const blogMissingLikes = newBlog;
+    const blogMissingLikes = { ...newBlog };
     delete blogMissingLikes.likes;
 
     const response = await makeCorrectPostRequest(api, blogMissingLikes);
@@ -65,7 +72,7 @@ describe("Creating a new blog post", () => {
   });
 
   test("without title property throws 400", async () => {
-    const blogMissingTitle = newBlog;
+    const blogMissingTitle = { ...newBlog };
     delete blogMissingTitle.title;
 
     const response = await api
@@ -78,7 +85,7 @@ describe("Creating a new blog post", () => {
   });
 
   test("without url property throws 400", async () => {
-    const blogMissingURL = newBlog;
+    const blogMissingURL = { ...newBlog };
     delete blogMissingURL.url;
 
     const response = await api
@@ -88,6 +95,21 @@ describe("Creating a new blog post", () => {
 
     expect(response.body.error).toBe("Title or url missed");
     expect(await helper.blogsInDb()).toHaveLength(helper.initialBlogs.length);
+  });
+
+  test("with correct user id succeeds 201 and return user data when the list is fetched", async () => {
+    const user = await User.findOne({});
+    const blog = { ...newBlog, userId: user.id };
+
+    const response = await makeCorrectPostRequest(api, blog);
+    expect(response.body.user).toBeDefined();
+
+    const blogsList = await api
+      .get("/api/blogs")
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+    const createdBlog = blogsList.body.find((b) => b.title === blog.title);
+    expect(createdBlog.user.username).toBeDefined();
   });
 });
 
