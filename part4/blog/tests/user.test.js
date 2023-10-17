@@ -7,14 +7,49 @@ const User = require("../models/user");
 
 const api = supertest(app);
 
-describe("Creation of new user when there is initially one", () => {
-  beforeEach(async () => {
-    await User.deleteMany({});
-    const passwordHash = await bcrypt.hash("testingPassword", 10);
-    const user = new User({ username: "root", user: "test", passwordHash });
-    await user.save();
-  });
+beforeEach(async () => {
+  await User.deleteMany({});
+  const passwordHash = await bcrypt.hash("testingPassword", 10);
+  const user = new User({ username: "root", user: "test", passwordHash });
+  await user.save();
+});
 
+test("List of users is returned as JSON", async () => {
+  await api
+    .get("/api/users")
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+
+  const response = await api.get("/api/users");
+  expect(response.body).toHaveLength(1);
+});
+
+test("List of users displays blogs data too", async () => {
+  const user = await User.findOne({});
+
+  const newBlog = {
+    title: "Test blog",
+    author: "unknown",
+    url: "http://test.com",
+    likes: 3,
+  };
+  newBlog.userId = user.id;
+
+  await api
+    .post("/api/blogs")
+    .send(newBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const usersList = await api
+    .get("/api/users")
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+  const userWithBlog = usersList.body.find((u) => u.username === user.username);
+  expect(userWithBlog.blogs[0].url).toBeDefined();
+});
+
+describe("Creation of new user when there is initially one", () => {
   const newUser = {
     username: "mluukkai",
     name: "Matti Luukkainen",
