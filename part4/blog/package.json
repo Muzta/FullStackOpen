@@ -25,5 +25,9 @@
     "express-async-errors": "^3.1.1",
     "mongoose": "^7.6.1",
     "mongoose-unique-validator": "^4.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "globalTeardown": "./tests/teardown.js"
   }
 }
