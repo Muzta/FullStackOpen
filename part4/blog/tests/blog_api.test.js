@@ -56,14 +56,13 @@ describe("Creating a new blog post", () => {
     return response;
   };
 
-  test("works", async () => {
+  test("succeeds 201 with fresh blog and return it as the response", async () => {
     const response = await makeCorrectPostRequest(api, newBlog);
-    expect(response).toBeDefined();
+    expect(response.body).toBeDefined();
   });
 
-  test("with likes property missing, default 0", async () => {
-    const blogMissingLikes = { ...newBlog };
-    delete blogMissingLikes.likes;
+  test("succeeds 201 with likes property missing, default 0", async () => {
+    const { likes, ...blogMissingLikes } = newBlog;
 
     const response = await makeCorrectPostRequest(api, blogMissingLikes);
     expect(response.body).toBeDefined();
@@ -72,8 +71,7 @@ describe("Creating a new blog post", () => {
   });
 
   test("without title property throws 400", async () => {
-    const blogMissingTitle = { ...newBlog };
-    delete blogMissingTitle.title;
+    const { title, ...blogMissingTitle } = newBlog;
 
     const response = await api
       .post("/api/blogs")
@@ -85,8 +83,7 @@ describe("Creating a new blog post", () => {
   });
 
   test("without url property throws 400", async () => {
-    const blogMissingURL = { ...newBlog };
-    delete blogMissingURL.url;
+    const { url, ...blogMissingURL } = newBlog;
 
     const response = await api
       .post("/api/blogs")

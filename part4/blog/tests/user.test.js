@@ -56,7 +56,7 @@ describe("Creation of new user when there is initially one", () => {
     password: "salainen",
   };
 
-  test("succeeds with a fresh username", async () => {
+  test("succeeds 201 with a fresh username", async () => {
     const usersAtStart = await helper.usersInDb();
 
     await api
@@ -92,7 +92,7 @@ describe("Creation of new user when there is initially one", () => {
   test("error 400 when password is not given", async () => {
     const usersAtStart = await helper.usersInDb();
 
-    const errorUser = { ...newUser, password: undefined };
+    const { password, ...errorUser } = newUser;
 
     const response = await api.post("/api/users/").send(errorUser).expect(400);
     expect(response.body.error).toBe(
@@ -126,7 +126,7 @@ describe("Creation of new user when there is initially one", () => {
   test("error 400 when username is not given", async () => {
     const usersAtStart = await helper.usersInDb();
 
-    const errorUser = { ...newUser, username: undefined };
+    const { username, ...errorUser } = newUser;
 
     const response = await api.post("/api/users").send(errorUser).expect(400);
     expect(response.body.error).toContain("required");
