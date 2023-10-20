@@ -8,4 +8,11 @@ const errorHandler = (error, request, response, next) => {
   next(error);
 };
 
-module.exports = { errorHandler };
+const tokenExtractor = (request, response, next) => {
+  const auth = request.get("authorization");
+  if (auth && auth.startsWith("Bearer"))
+    request.token = auth.replace("Bearer ", "");
+  next();
+};
+
+module.exports = { errorHandler, tokenExtractor };

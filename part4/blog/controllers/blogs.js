@@ -3,11 +3,11 @@ const Blog = require("../models/blog");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
-const getTokenFrom = (request) => {
-  const auth = request.get("authorization");
-  if (auth && auth.startsWith("Bearer")) return auth.replace("Bearer ", "");
-  return null;
-};
+// const getTokenFrom = (request) => {
+//   const auth = request.get("authorization");
+//   if (auth && auth.startsWith("Bearer")) return auth.replace("Bearer ", "");
+//   return null;
+// };
 
 blogsRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
@@ -19,7 +19,7 @@ blogsRouter.post("/", async (request, response) => {
   if (!body.title || !body.url)
     return response.status(400).json({ error: "Title or url missed" });
 
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
   if (!decodedToken.id)
     return response.status(401).json({ error: "Invalid token" });
 
