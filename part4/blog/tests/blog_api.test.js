@@ -12,11 +12,6 @@ beforeEach(async () => {
   await Blog.deleteMany({});
   const blogsToInsert = helper.initialBlogs.map((blog) => new Blog(blog));
   await Blog.insertMany(blogsToInsert);
-
-  await User.deleteMany({});
-  const passwordHash = await bcrypt.hash("testingPassword", 10);
-  const user = new User({ username: "root", name: "test", passwordHash });
-  await user.save();
 });
 
 test("List of blogs is returned as JSON", async () => {
@@ -35,6 +30,32 @@ test("Unique identifier property is called 'id'", async () => {
 });
 
 describe("Creating a new blog post", () => {
+  const users = [
+    { username: "root", name: "root", password: "testingPassword1" },
+    { username: "test", name: "test", password: "testingPassword2" },
+  ];
+
+  const getPasswordHash = async (password) => await bcrypt.hash(password, 10);
+
+  beforeEach(async () => {
+    await User.deleteMany({});
+
+    const u1 = users[0];
+    const user1 = new User({
+      username: u1.username,
+      name: u1.name,
+      passwordHash: await getPasswordHash(u1.password),
+    });
+
+    const u2 = users[1];
+    const user2 = new User({
+      username: u2.username,
+      name: u2.name,
+      passwordHash: await getPasswordHash(u2.password),
+    });
+    await User.insertMany([user1, user2]);
+  });
+
   const newBlog = {
     title: "Test blog",
     author: "unknown",
@@ -42,10 +63,21 @@ describe("Creating a new blog post", () => {
     likes: 3,
   };
 
-  const makeCorrectPostRequest = async (api, data) => {
+  const tokenFromUser = async (user) => {
+    const { username, password } = user;
+    const response = await api
+      .post("/api/login")
+      .send({ username, password })
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+    return response.body.token;
+  };
+
+  const makeCorrectPostRequest = async (api, data, token) => {
     const response = await api
       .post("/api/blogs")
       .send(data)
+      .set({ Authorization: `Bearer ${token}` })
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -57,25 +89,34 @@ describe("Creating a new blog post", () => {
   };
 
   test("succeeds 201 with fresh blog and return it as the response", async () => {
-    const response = await makeCorrectPostRequest(api, newBlog);
+    const token = await tokenFromUser(users[1]);
+    const response = await makeCorrectPostRequest(api, newBlog, token);
+
     expect(response.body).toBeDefined();
+    const ownerInDb = await User.findOne({ username: users[1].username });
+    expect(response.body.user).toBe(ownerInDb.id);
   });
 
   test("succeeds 201 with likes property missing, default 0", async () => {
     const { likes, ...blogMissingLikes } = newBlog;
+    const token = await tokenFromUser(users[1]);
+    const response = await makeCorrectPostRequest(api, blogMissingLikes, token);
 
-    const response = await makeCorrectPostRequest(api, blogMissingLikes);
     expect(response.body).toBeDefined();
     expect(blogMissingLikes.likes).toBeUndefined();
     expect(response.body.likes).toEqual(0);
+    const ownerInDb = await User.findOne({ username: users[1].username });
+    expect(response.body.user).toBe(ownerInDb.id);
   });
 
   test("without title property throws 400", async () => {
     const { title, ...blogMissingTitle } = newBlog;
+    const token = await tokenFromUser(users[1]);
 
     const response = await api
       .post("/api/blogs")
       .send(blogMissingTitle)
+      .set({ Authorization: `Bearer ${token}` })
       .expect(400);
 
     expect(response.body.error).toBe("Title or url missed");
@@ -84,10 +125,12 @@ describe("Creating a new blog post", () => {
 
   test("without url property throws 400", async () => {
     const { url, ...blogMissingURL } = newBlog;
+    const token = await tokenFromUser(users[1]);
 
     const response = await api
       .post("/api/blogs")
       .send(blogMissingURL)
+      .set({ Authorization: `Bearer ${token}` })
       .expect(400);
 
     expect(response.body.error).toBe("Title or url missed");
@@ -95,11 +138,13 @@ describe("Creating a new blog post", () => {
   });
 
   test("with correct user id succeeds 201 and return user data when the list is fetched", async () => {
-    const user = await User.findOne({});
+    const user = await User.findOne({ username: users[1].username });
     const blog = { ...newBlog, userId: user.id };
+    const token = await tokenFromUser(users[1]);
 
-    const response = await makeCorrectPostRequest(api, blog);
-    expect(response.body.user).toBeDefined();
+    const response = await makeCorrectPostRequest(api, blog, token);
+    const ownerInDb = await User.findOne({ username: users[1].username });
+    expect(response.body.user).toBe(ownerInDb.id);
 
     const blogsList = await api
       .get("/api/blogs")
