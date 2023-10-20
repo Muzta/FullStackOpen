@@ -13,11 +13,8 @@ blogsRouter.post("/", async (request, response) => {
   if (!body.title || !body.url)
     return response.status(400).json({ error: "Title or url missed" });
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  if (!decodedToken.id)
-    return response.status(401).json({ error: "Invalid token" });
+  const user = request.user;
 
-  const user = await User.findById(decodedToken.id);
   // If likes is undefined, default 0
   const blog = new Blog({ likes: 0, ...body, user: user.id });
   const result = await blog.save();
