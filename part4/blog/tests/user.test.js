@@ -27,6 +27,15 @@ test("List of users is returned as JSON", async () => {
 test("List of users displays blogs data too", async () => {
   const user = await User.findOne({});
 
+  const tokenFromUser = async (user) => {
+    const response = await api
+      .post("/api/login")
+      .send({ username: user.username, password: "testingPassword" })
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+    return response.body.token;
+  };
+
   const newBlog = {
     title: "Test blog",
     author: "unknown",
@@ -35,9 +44,12 @@ test("List of users displays blogs data too", async () => {
   };
   newBlog.userId = user.id;
 
+  const token = await tokenFromUser(user);
+
   await api
     .post("/api/blogs")
     .send(newBlog)
+    .set({ Authorization: `Bearer ${token}` })
     .expect(201)
     .expect("Content-Type", /application\/json/);
 

@@ -8,9 +8,52 @@ const User = require("../models/user");
 
 const api = supertest(app);
 
+const users = [
+  { username: "root", name: "root", password: "testingPassword1" },
+  { username: "test", name: "test", password: "testingPassword2" },
+];
+
+const tokenFromUser = async (user) => {
+  const { username, password } = user;
+  const response = await api
+    .post("/api/login")
+    .send({ username, password })
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+  return response.body.token;
+};
+
+// Populate the users table for future ownership
+beforeAll(async () => {
+  await User.deleteMany({});
+
+  const getPasswordHash = async (password) => await bcrypt.hash(password, 10);
+
+  const u1 = users[0];
+  const user1 = new User({
+    username: u1.username,
+    name: u1.name,
+    passwordHash: await getPasswordHash(u1.password),
+  });
+
+  const u2 = users[1];
+  const user2 = new User({
+    username: u2.username,
+    name: u2.name,
+    passwordHash: await getPasswordHash(u2.password),
+  });
+  await User.insertMany([user1, user2]);
+});
+
 beforeEach(async () => {
   await Blog.deleteMany({});
-  const blogsToInsert = helper.initialBlogs.map((blog) => new Blog(blog));
+  const dbUsers = await helper.usersInDb();
+
+  const userId = dbUsers.find((u) => u.username === users[1].username).id;
+  const blogsToInsert = helper.initialBlogs.map(
+    (blog) => new Blog({ ...blog, user: userId })
+  );
+
   await Blog.insertMany(blogsToInsert);
 });
 
@@ -30,47 +73,11 @@ test("Unique identifier property is called 'id'", async () => {
 });
 
 describe("Creating a new blog post", () => {
-  const users = [
-    { username: "root", name: "root", password: "testingPassword1" },
-    { username: "test", name: "test", password: "testingPassword2" },
-  ];
-
-  const getPasswordHash = async (password) => await bcrypt.hash(password, 10);
-
-  beforeEach(async () => {
-    await User.deleteMany({});
-
-    const u1 = users[0];
-    const user1 = new User({
-      username: u1.username,
-      name: u1.name,
-      passwordHash: await getPasswordHash(u1.password),
-    });
-
-    const u2 = users[1];
-    const user2 = new User({
-      username: u2.username,
-      name: u2.name,
-      passwordHash: await getPasswordHash(u2.password),
-    });
-    await User.insertMany([user1, user2]);
-  });
-
   const newBlog = {
     title: "Test blog",
     author: "unknown",
     url: "http://test.com",
     likes: 3,
-  };
-
-  const tokenFromUser = async (user) => {
-    const { username, password } = user;
-    const response = await api
-      .post("/api/login")
-      .send({ username, password })
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
-    return response.body.token;
   };
 
   const makeCorrectPostRequest = async (api, data, token) => {
@@ -156,11 +163,15 @@ describe("Creating a new blog post", () => {
 });
 
 describe("Deletion of a blog post", () => {
-  test("succeeds with code 204 if id is valid and in db", async () => {
+  test("succeeds with code 204 if id is valid and in db, done by its owner", async () => {
     const startingBlogs = await helper.blogsInDb();
     const blogToDelete = startingBlogs[0];
+    const token = await tokenFromUser(users[1]);
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set({ Authorization: `Bearer ${token}` })
+      .expect(204);
 
     const endingBlogs = await helper.blogsInDb();
     expect(endingBlogs).toHaveLength(startingBlogs.length - 1);
@@ -171,27 +182,62 @@ describe("Deletion of a blog post", () => {
     expect(endingBlogTitles).not.toContain(blogToDelete.title);
   });
 
-  test("succeeds with code 204 if id is valid but not in db", async () => {
+  test("error code 404 if id is valid but not in db, with custom error message", async () => {
     const startingBlogs = await helper.blogsInDb();
     const existingId = startingBlogs[0].id;
+    const token = await tokenFromUser(users[1]);
     const inventedId = existingId.slice(0, -3) + "000";
 
-    await api.delete(`/api/blogs/${inventedId}`).expect(204);
+    const response = await api
+      .delete(`/api/blogs/${inventedId}`)
+      .set({ Authorization: `Bearer ${token}` })
+      .expect(404);
 
+    expect(response.body.error).toBe("Blog not found");
     const endingBlogs = await helper.blogsInDb();
     expect(endingBlogs).toHaveLength(startingBlogs.length);
   });
 
-  test("error if id has an invalid format", async () => {
+  test("error 400 if id has an invalid format, with custom error message", async () => {
     const startingBlogs = await helper.blogsInDb();
     const existingId = startingBlogs[0].id;
+    const token = await tokenFromUser(users[1]);
     const malformattedId = existingId.slice(0, -2);
 
     const response = await api
       .delete(`/api/blogs/${malformattedId}`)
+      .set({ Authorization: `Bearer ${token}` })
       .expect(400);
-    expect(response.body.error).toBe("Malformatted id");
 
+    expect(response.body.error).toBe("Malformatted id");
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+  });
+
+  test("error 401 when no auth token is provided", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const blogToDelete = startingBlogs[0];
+
+    const response = await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401);
+
+    expect(response.body.error).toBe("jwt must be provided");
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+  });
+
+  test("error 401 when user tries to delete a non-owned blog, with custom error message", async () => {
+    const startingBlogs = await helper.blogsInDb();
+    const blogToDelete = startingBlogs[0];
+    const token = await tokenFromUser(users[0]);
+
+    const response = await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set({ Authorization: `Bearer ${token}` })
+      .expect(401);
+
+    expect(response.body.error).toBe("Only blog owner can delete it");
     const endingBlogs = await helper.blogsInDb();
     expect(endingBlogs).toHaveLength(startingBlogs.length);
   });

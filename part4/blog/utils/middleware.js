@@ -11,6 +11,7 @@ const errorHandler = (error, request, response, next) => {
   next(error);
 };
 
+// Add the auth token from header to request
 const tokenExtractor = (request, response, next) => {
   const auth = request.get("authorization");
   if (auth && auth.startsWith("Bearer"))
@@ -18,6 +19,7 @@ const tokenExtractor = (request, response, next) => {
   next();
 };
 
+// Add the user mongoose object to the request after verifying his jwt
 const userExtractor = async (request, response, next) => {
   const userToken = jwt.verify(request.token, process.env.SECRET);
   if (!userToken.id)
