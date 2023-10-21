@@ -49,6 +49,7 @@ beforeEach(async () => {
   await Blog.deleteMany({});
   const dbUsers = await helper.usersInDb();
 
+  // Set every blog owner to second user
   const userId = dbUsers.find((u) => u.username === users[1].username).id;
   const blogsToInsert = helper.initialBlogs.map(
     (blog) => new Blog({ ...blog, user: userId })
@@ -80,11 +81,17 @@ describe("Creating a new blog post", () => {
     likes: 3,
   };
 
-  const makeCorrectPostRequest = async (api, data, token) => {
-    const response = await api
+  let userToken, ownerId;
+
+  const makePostRequest = (data) => {
+    return api
       .post("/api/blogs")
       .send(data)
-      .set({ Authorization: `Bearer ${token}` })
+      .set({ Authorization: `Bearer ${userToken}` });
+  };
+
+  const makeCorrectPostRequest = async (data) => {
+    const response = await makePostRequest(data)
       .expect(201)
       .expect("Content-Type", /application\/json/);
 
@@ -92,86 +99,84 @@ describe("Creating a new blog post", () => {
     expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1);
     const titles = blogsAtEnd.map((blog) => blog.title);
     expect(titles).toContainEqual(newBlog.title);
+    expect(response.body).toBeDefined();
+    expect(response.body.user).toBe(ownerId);
     return response;
   };
 
-  test("succeeds 201 with fresh blog and return it as the response", async () => {
-    const token = await tokenFromUser(users[1]);
-    const response = await makeCorrectPostRequest(api, newBlog, token);
+  beforeEach(async () => {
+    userToken = await tokenFromUser(users[1]);
+    const owner = await User.findOne({ username: users[1].username });
+    ownerId = owner.id;
+  });
 
-    expect(response.body).toBeDefined();
-    const ownerInDb = await User.findOne({ username: users[1].username });
-    expect(response.body.user).toBe(ownerInDb.id);
+  test("succeeds 201 with fresh blog and return it as the response", async () => {
+    await makeCorrectPostRequest(newBlog);
   });
 
   test("succeeds 201 with likes property missing, default 0", async () => {
     const { likes, ...blogMissingLikes } = newBlog;
-    const token = await tokenFromUser(users[1]);
-    const response = await makeCorrectPostRequest(api, blogMissingLikes, token);
+    const response = await makeCorrectPostRequest(blogMissingLikes);
 
-    expect(response.body).toBeDefined();
     expect(blogMissingLikes.likes).toBeUndefined();
     expect(response.body.likes).toEqual(0);
-    const ownerInDb = await User.findOne({ username: users[1].username });
-    expect(response.body.user).toBe(ownerInDb.id);
+  });
+
+  test("with correct user id succeeds 201 and return user data when the list is fetched", async () => {
+    await makeCorrectPostRequest(newBlog);
+
+    const response = await api
+      .get("/api/blogs")
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
+    const blogList = response.body;
+    const createdBlog = blogList.find((b) => b.title === newBlog.title);
+    expect(createdBlog.user.username).toBeDefined();
   });
 
   test("without title property throws 400", async () => {
     const { title, ...blogMissingTitle } = newBlog;
-    const token = await tokenFromUser(users[1]);
-
-    const response = await api
-      .post("/api/blogs")
-      .send(blogMissingTitle)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(400);
+    const response = await makePostRequest(blogMissingTitle).expect(400);
 
     expect(response.body.error).toBe("Title or url missed");
-    expect(await helper.blogsInDb()).toHaveLength(helper.initialBlogs.length);
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
 
   test("without url property throws 400", async () => {
     const { url, ...blogMissingURL } = newBlog;
-    const token = await tokenFromUser(users[1]);
-
-    const response = await api
-      .post("/api/blogs")
-      .send(blogMissingURL)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(400);
+    const response = await makePostRequest(blogMissingURL).expect(400);
 
     expect(response.body.error).toBe("Title or url missed");
-    expect(await helper.blogsInDb()).toHaveLength(helper.initialBlogs.length);
-  });
-
-  test("with correct user id succeeds 201 and return user data when the list is fetched", async () => {
-    const user = await User.findOne({ username: users[1].username });
-    const blog = { ...newBlog, userId: user.id };
-    const token = await tokenFromUser(users[1]);
-
-    const response = await makeCorrectPostRequest(api, blog, token);
-    const ownerInDb = await User.findOne({ username: users[1].username });
-    expect(response.body.user).toBe(ownerInDb.id);
-
-    const blogsList = await api
-      .get("/api/blogs")
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
-    const createdBlog = blogsList.body.find((b) => b.title === blog.title);
-    expect(createdBlog.user.username).toBeDefined();
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
   });
 });
 
 describe("Deletion of a blog post", () => {
-  test("succeeds with code 204 if id is valid and in db, done by its owner", async () => {
-    const startingBlogs = await helper.blogsInDb();
-    const blogToDelete = startingBlogs[0];
-    const token = await tokenFromUser(users[1]);
+  let startingBlogs, userToken, blogToDelete, blogToDeleteId;
 
-    await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(204);
+  beforeEach(async () => {
+    startingBlogs = await helper.blogsInDb();
+    userToken = await tokenFromUser(users[1]);
+    blogToDelete = startingBlogs[0];
+    blogToDeleteId = blogToDelete.id;
+  });
+
+  const makeDeleteRequest = (id = blogToDeleteId, token = userToken) => {
+    return api
+      .delete(`/api/blogs/${id}`)
+      .set({ Authorization: `Bearer ${token}` });
+  };
+
+  const expectedError = async (response, errorMessage) => {
+    expect(response.body.error).toBe(errorMessage);
+    const endingBlogs = await helper.blogsInDb();
+    expect(endingBlogs).toHaveLength(startingBlogs.length);
+  };
+
+  test("succeeds with code 204 if id is valid and in db, done by its owner", async () => {
+    await makeDeleteRequest().expect(204);
 
     const endingBlogs = await helper.blogsInDb();
     expect(endingBlogs).toHaveLength(startingBlogs.length - 1);
@@ -183,63 +188,31 @@ describe("Deletion of a blog post", () => {
   });
 
   test("error code 404 if id is valid but not in db, with custom error message", async () => {
-    const startingBlogs = await helper.blogsInDb();
-    const existingId = startingBlogs[0].id;
-    const token = await tokenFromUser(users[1]);
-    const inventedId = existingId.slice(0, -3) + "000";
+    const inventedId = blogToDeleteId.slice(0, -3) + "000";
 
-    const response = await api
-      .delete(`/api/blogs/${inventedId}`)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(404);
-
-    expect(response.body.error).toBe("Blog not found");
-    const endingBlogs = await helper.blogsInDb();
-    expect(endingBlogs).toHaveLength(startingBlogs.length);
+    const response = await makeDeleteRequest(inventedId).expect(404);
+    await expectedError(response, "Blog not found");
   });
 
   test("error 400 if id has an invalid format, with custom error message", async () => {
-    const startingBlogs = await helper.blogsInDb();
-    const existingId = startingBlogs[0].id;
-    const token = await tokenFromUser(users[1]);
-    const malformattedId = existingId.slice(0, -2);
+    const malformattedId = blogToDeleteId.slice(0, -2);
 
-    const response = await api
-      .delete(`/api/blogs/${malformattedId}`)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(400);
-
-    expect(response.body.error).toBe("Malformatted id");
-    const endingBlogs = await helper.blogsInDb();
-    expect(endingBlogs).toHaveLength(startingBlogs.length);
+    const response = await makeDeleteRequest(malformattedId).expect(400);
+    await expectedError(response, "Malformatted id");
   });
 
   test("error 401 when no auth token is provided", async () => {
-    const startingBlogs = await helper.blogsInDb();
-    const blogToDelete = startingBlogs[0];
-
     const response = await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
+      .delete(`/api/blogs/${blogToDeleteId}`)
       .expect(401);
-
-    expect(response.body.error).toBe("jwt must be provided");
-    const endingBlogs = await helper.blogsInDb();
-    expect(endingBlogs).toHaveLength(startingBlogs.length);
+    await expectedError(response, "jwt must be provided");
   });
 
   test("error 401 when user tries to delete a non-owned blog, with custom error message", async () => {
-    const startingBlogs = await helper.blogsInDb();
-    const blogToDelete = startingBlogs[0];
-    const token = await tokenFromUser(users[0]);
+    const badToken = await tokenFromUser(users[0]);
 
-    const response = await api
-      .delete(`/api/blogs/${blogToDelete.id}`)
-      .set({ Authorization: `Bearer ${token}` })
-      .expect(401);
-
-    expect(response.body.error).toBe("Only blog owner can delete it");
-    const endingBlogs = await helper.blogsInDb();
-    expect(endingBlogs).toHaveLength(startingBlogs.length);
+    const response = await makeDeleteRequest(undefined, badToken).expect(401);
+    await expectedError(response, "Only blog owner can delete it");
   });
 });
 
