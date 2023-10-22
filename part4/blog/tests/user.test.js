@@ -7,11 +7,25 @@ const User = require("../models/user");
 
 const api = supertest(app);
 
+const testingUser = {
+  username: "test",
+  user: "test",
+  password: "testingPassword",
+};
+
+let usersAtStart;
+
 beforeEach(async () => {
   await User.deleteMany({});
-  const passwordHash = await bcrypt.hash("testingPassword", 10);
-  const user = new User({ username: "root", user: "test", passwordHash });
+  const passwordHash = await bcrypt.hash(testingUser.password, 10);
+  const user = new User({
+    username: testingUser.username,
+    user: testingUser.user,
+    passwordHash,
+  });
   await user.save();
+
+  usersAtStart = await helper.usersInDb();
 });
 
 test("List of users is returned as JSON", async () => {
@@ -26,25 +40,15 @@ test("List of users is returned as JSON", async () => {
 
 test("List of users displays blogs data too", async () => {
   const user = await User.findOne({});
-
-  const tokenFromUser = async (user) => {
-    const response = await api
-      .post("/api/login")
-      .send({ username: user.username, password: "testingPassword" })
-      .expect(200)
-      .expect("Content-Type", /application\/json/);
-    return response.body.token;
-  };
+  const token = await helper.tokenFromUser(api, testingUser);
 
   const newBlog = {
     title: "Test blog",
     author: "unknown",
     url: "http://test.com",
     likes: 3,
+    user: user.id,
   };
-  newBlog.userId = user.id;
-
-  const token = await tokenFromUser(user);
 
   await api
     .post("/api/blogs")
@@ -68,14 +72,29 @@ describe("Creation of new user when there is initially one", () => {
     password: "salainen",
   };
 
-  test("succeeds 201 with a fresh username", async () => {
-    const usersAtStart = await helper.usersInDb();
-
-    await api
+  const makePostRequest = (user, httpCode) => {
+    return api
       .post("/api/users")
-      .send(newUser)
-      .expect(201)
-      .expect("Content-Type", /application\/json/);
+      .send(user)
+      .expect("Content-Type", /application\/json/)
+      .expect(httpCode);
+  };
+
+  const checkBadPostRequest = async (response, errorMessage, errorUser) => {
+    expect(response.body.error).toContain(errorMessage);
+
+    const usersAtEnd = await helper.usersInDb();
+    expect(usersAtEnd).toEqual(usersAtStart);
+
+    // To avoid in the last test
+    if (errorUser) {
+      const usernames = usersAtEnd.map((u) => u.username);
+      expect(usernames).not.toContain(errorUser.username);
+    }
+  };
+
+  test("succeeds 201 with a fresh username", async () => {
+    await makePostRequest(newUser, 201);
 
     const usersAtEnd = await helper.usersInDb();
     expect(usersAtEnd).toHaveLength(usersAtStart.length + 1);
@@ -85,85 +104,45 @@ describe("Creation of new user when there is initially one", () => {
   });
 
   test("error 400 when password given is shorter than 3 characters", async () => {
-    const usersAtStart = await helper.usersInDb();
-
     const errorUser = { ...newUser, password: newUser.password.slice(0, 2) };
-
-    const response = await api.post("/api/users/").send(errorUser).expect(400);
-    expect(response.body.error).toBe(
-      "Password must be at least 3 characters long"
+    const response = await makePostRequest(errorUser, 400);
+    await checkBadPostRequest(
+      response,
+      "Password must be at least 3 characters long",
+      errorUser
     );
-
-    const usersAtEnd = await helper.usersInDb();
-    expect(usersAtEnd).toEqual(usersAtStart);
-
-    const usernames = usersAtEnd.map((u) => u.username);
-    expect(usernames).not.toContain(errorUser.username);
   });
 
   test("error 400 when password is not given", async () => {
-    const usersAtStart = await helper.usersInDb();
-
     const { password, ...errorUser } = newUser;
-
-    const response = await api.post("/api/users/").send(errorUser).expect(400);
-    expect(response.body.error).toBe(
-      "Password must be at least 3 characters long"
+    const response = await makePostRequest(errorUser, 400);
+    await checkBadPostRequest(
+      response,
+      "Password must be at least 3 characters long",
+      errorUser
     );
-
-    const usersAtEnd = await helper.usersInDb();
-    expect(usersAtEnd).toEqual(usersAtStart);
-
-    const usernames = usersAtEnd.map((u) => u.username);
-    expect(usernames).not.toContain(errorUser.username);
   });
 
   test("error 400 when username is shorter than 3 characters", async () => {
-    const usersAtStart = await helper.usersInDb();
-
     const errorUser = { ...newUser, username: newUser.username.slice(0, 2) };
-
-    const response = await api.post("/api/users").send(errorUser).expect(400);
-    expect(response.body.error).toContain(
-      "Username must be at least 3 characters long"
+    const response = await makePostRequest(errorUser, 400);
+    await checkBadPostRequest(
+      response,
+      "Username must be at least 3 characters long",
+      errorUser
     );
-
-    const usersAtEnd = await helper.usersInDb();
-    expect(usersAtEnd).toEqual(usersAtStart);
-
-    const usernames = usersAtEnd.map((u) => u.username);
-    expect(usernames).not.toContain(errorUser.username);
   });
 
   test("error 400 when username is not given", async () => {
-    const usersAtStart = await helper.usersInDb();
-
     const { username, ...errorUser } = newUser;
-
-    const response = await api.post("/api/users").send(errorUser).expect(400);
-    expect(response.body.error).toContain("required");
-
-    const usersAtEnd = await helper.usersInDb();
-    expect(usersAtEnd).toEqual(usersAtStart);
-
-    const usernames = usersAtEnd.map((u) => u.username);
-    expect(usernames).not.toContain(errorUser.username);
+    const response = await makePostRequest(errorUser, 400);
+    await checkBadPostRequest(response, "required", errorUser);
   });
 
   test("error 400 when username is already taken", async () => {
-    await api.post("/api/users").send(newUser).expect(201);
-    const usersAtStart = await helper.usersInDb();
-
-    const repeatedUser = { ...newUser, name: "New one" };
-
-    const response = await api
-      .post("/api/users")
-      .send(repeatedUser)
-      .expect(400);
-    expect(response.body.error).toContain("expected `username` to be unique");
-
-    const usersAtEnd = await helper.usersInDb();
-    expect(usersAtEnd).toEqual(usersAtStart);
+    const repeatedUser = { ...newUser, username: testingUser.username };
+    const response = await makePostRequest(repeatedUser, 400);
+    await checkBadPostRequest(response, "expected `username` to be unique");
   });
 });
 

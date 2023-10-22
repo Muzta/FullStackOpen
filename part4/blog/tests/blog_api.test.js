@@ -13,16 +13,6 @@ const users = [
   { username: "test", name: "test", password: "testingPassword2" },
 ];
 
-const tokenFromUser = async (user) => {
-  const { username, password } = user;
-  const response = await api
-    .post("/api/login")
-    .send({ username, password })
-    .expect(200)
-    .expect("Content-Type", /application\/json/);
-  return response.body.token;
-};
-
 // Populate the users table for future ownership
 beforeAll(async () => {
   await User.deleteMany({});
@@ -105,7 +95,7 @@ describe("Creating a new blog post", () => {
   };
 
   beforeEach(async () => {
-    userToken = await tokenFromUser(users[1]);
+    userToken = await helper.tokenFromUser(api, users[1]);
     const owner = await User.findOne({ username: users[1].username });
     ownerId = owner.id;
   });
@@ -158,7 +148,7 @@ describe("Deletion of a blog post", () => {
 
   beforeEach(async () => {
     startingBlogs = await helper.blogsInDb();
-    userToken = await tokenFromUser(users[1]);
+    userToken = await helper.tokenFromUser(api, users[1]);
     blogToDelete = startingBlogs[0];
     blogToDeleteId = blogToDelete.id;
   });
@@ -209,7 +199,7 @@ describe("Deletion of a blog post", () => {
   });
 
   test("error 401 when user tries to delete a non-owned blog, with custom error message", async () => {
-    const badToken = await tokenFromUser(users[0]);
+    const badToken = await helper.tokenFromUser(api, users[0]);
 
     const response = await makeDeleteRequest(undefined, badToken).expect(401);
     await expectedError(response, "Only blog owner can delete it");
