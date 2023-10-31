@@ -12,17 +12,8 @@ const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [blog, setBlog] = useState(null);
   const [notification, setNotification] = useState({});
   const blogFormRef = useRef();
-
-  const resetBlogState = () => {
-    setBlog({
-      title: "",
-      author: "",
-      url: "",
-    });
-  };
 
   const createNotification = ({ message, error = false }) => {
     setNotification({ message, error });
@@ -33,7 +24,6 @@ const App = () => {
 
   useEffect(() => {
     blogService.getAll().then((blogs) => setBlogs(blogs));
-    resetBlogState();
   }, []);
 
   useEffect(() => {
@@ -60,26 +50,15 @@ const App = () => {
     }
   };
 
-  const addBlog = async (event) => {
-    event.preventDefault();
-
+  const addBlog = async (blogObject) => {
     try {
-      const newBlog = await blogService.addBlog(blog);
       blogFormRef.current.toggleVisibility();
+      const newBlog = await blogService.addBlog(blogObject);
       setBlogs(blogs.concat(newBlog));
-      resetBlogState();
-      createNotification({ message: `A new blog was added` });
+      createNotification({ message: "A new blog was added" });
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
-  };
-
-  const handleBlogChanges = (event) => {
-    const { name, value } = event.target;
-    setBlog({
-      ...blog,
-      [name]: value,
-    });
   };
 
   const handleLogout = () => {
@@ -99,11 +78,7 @@ const App = () => {
           </p>
 
           <Togglable buttonLabel="New blog" ref={blogFormRef}>
-            <BlogForm
-              handleSubmit={addBlog}
-              blog={blog}
-              handleChanges={handleBlogChanges}
-            />
+            <BlogForm createBlog={addBlog} />
           </Togglable>
 
           <div>

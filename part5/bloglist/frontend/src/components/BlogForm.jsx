@@ -1,43 +1,75 @@
-const BlogForm = ({ handleSubmit, blog, handleChanges }) => {
-  return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <div>
-          Title:
-          <input
-            type="text"
-            value={blog.title}
-            name="title"
-            onChange={handleChanges}
-            required
-          ></input>
-        </div>
+import { useState, useEffect } from "react";
 
-        <div>
-          Author:
-          <input
-            type="text"
-            value={blog.author}
-            name="author"
-            onChange={handleChanges}
-          ></input>
-        </div>
+const BlogForm = ({ createBlog, handleSubmit, blog, handleChanges }) => {
+  const [newBlog, setNewBlog] = useState(null);
 
-        <div>
-          Url:
-          <input
-            type="url"
-            value={blog.url}
-            name="url"
-            onChange={handleChanges}
-            required
-          ></input>
-        </div>
+  const resetBlogState = () => {
+    setNewBlog({
+      title: "",
+      author: "",
+      url: "",
+    });
+  };
 
-        <button type="submit">Create</button>
-      </form>
-    </div>
-  );
+  useEffect(() => {
+    resetBlogState();
+  }, []);
+
+  const addBlog = (event) => {
+    event.preventDefault();
+    createBlog(newBlog);
+    resetBlogState();
+  };
+
+  const handleBlogChanges = (event) => {
+    const { name, value } = event.target;
+    setNewBlog({
+      ...newBlog,
+      [name]: value,
+    });
+  };
+
+  if (newBlog) {
+    return (
+      <div>
+        <form onSubmit={addBlog}>
+          <div>
+            Title:
+            <input
+              type="text"
+              value={newBlog.title}
+              name="title"
+              onChange={handleBlogChanges}
+              required
+            ></input>
+          </div>
+
+          <div>
+            Author:
+            <input
+              type="text"
+              value={newBlog.author}
+              name="author"
+              onChange={handleBlogChanges}
+            ></input>
+          </div>
+
+          <div>
+            Url:
+            <input
+              type="url"
+              value={newBlog.url}
+              name="url"
+              onChange={handleBlogChanges}
+              required
+            ></input>
+          </div>
+
+          <button type="submit">Create</button>
+        </form>
+      </div>
+    );
+  }
 };
 
 export default BlogForm;
