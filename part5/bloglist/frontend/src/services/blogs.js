@@ -16,4 +16,11 @@ const addBlog = async (blog) => {
   return response.data;
 };
 
-export default { getAll, addBlog, setToken };
+const likeBlog = async (blog) => {
+  const blogUrl = `${baseUrl}/${blog.id}`;
+  blog.likes++;
+  const response = await axios.put(blogUrl, blog);
+  return response.data;
+};
+
+export default { getAll, addBlog, setToken, likeBlog };

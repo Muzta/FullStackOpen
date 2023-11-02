@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const BlogForm = ({ createBlog, handleSubmit, blog, handleChanges }) => {
+const BlogForm = ({ createBlog }) => {
   const [newBlog, setNewBlog] = useState(null);
 
   const resetBlogState = () => {

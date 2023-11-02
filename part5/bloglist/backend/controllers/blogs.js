@@ -45,7 +45,8 @@ blogsRouter.delete(
 blogsRouter.put("/:id", async (request, response) => {
   const id = request.params.id;
   const body = request.body;
-  const blogpost = { ...body };
+  // If user data is provided, retain only its id. Otherwise, maintain the existing user id value
+  const blogpost = { ...body, user: body.user.id || body.user };
 
   const updatedBlogpost = await Blog.findByIdAndUpdate(id, blogpost, {
     new: true,

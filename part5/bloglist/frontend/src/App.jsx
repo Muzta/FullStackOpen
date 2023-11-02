@@ -53,9 +53,20 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       blogFormRef.current.toggleVisibility();
-      const newBlog = await blogService.addBlog(blogObject);
-      setBlogs(blogs.concat(newBlog));
+      await blogService.addBlog(blogObject);
+      // The app automatically renders all the blogs when setBlogs is called
+      setBlogs(blogs);
       createNotification({ message: "A new blog was added" });
+    } catch (error) {
+      createNotification({ message: error.response.data.error, error: true });
+    }
+  };
+
+  const likeBlog = async (blogObject) => {
+    try {
+      await blogService.likeBlog(blogObject);
+      // As the blog is updated on the DB, calls setBlogs() to re-render the app and fetch the updated blog likes
+      setBlogs(blogs);
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
@@ -87,7 +98,11 @@ const App = () => {
 
           <div>
             {blogs.map((blog) => (
-              <Blog key={blog.id} blog={blog} />
+              <Blog
+                key={blog.id}
+                blog={blog}
+                handleLike={() => likeBlog(blog)}
+              />
             ))}
           </div>
         </div>
