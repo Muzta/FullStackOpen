@@ -10,10 +10,10 @@ const Blog = ({ blog, handleLike, handleRemove }) => {
   };
 
   return (
-    <div style={blogStyle}>
+    <div id="blog-data" style={blogStyle}>
       {blog.title} <i>{blog.author}</i>
       <Togglable buttonLabel="View" hideLabel="Hide">
-        <div>
+        <div id="blog-content">
           {blog.url}
           <br></br>
           Likes {blog.likes} <button onClick={handleLike}>Like</button>
