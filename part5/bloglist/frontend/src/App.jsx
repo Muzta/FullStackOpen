@@ -78,9 +78,24 @@ const App = () => {
     }
   };
 
+  const deleteBlog = async (blogObject) => {
+    if (
+      window.confirm(`Remove blog ${blogObject.title} by ${blogObject.author}`)
+    ) {
+      try {
+        await blogService.deleteBlog(blogObject);
+        setBlogs(blogs);
+        createNotification({ message: `Blog ${blogObject.title} was removed` });
+      } catch (error) {
+        createNotification({ message: error.response.data.error, error: true });
+      }
+    }
+  };
+
   const handleLogout = () => {
     window.localStorage.clear();
     setUser(null);
+    blogService.setToken(null);
   };
 
   return (
@@ -108,6 +123,7 @@ const App = () => {
                 key={blog.id}
                 blog={blog}
                 handleLike={() => likeBlog(blog)}
+                handleRemove={() => deleteBlog(blog)}
               />
             ))}
           </div>
