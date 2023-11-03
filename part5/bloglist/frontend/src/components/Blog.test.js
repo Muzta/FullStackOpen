@@ -16,10 +16,14 @@ describe("<Blog />", () => {
     likes: 100,
     user: user,
   };
-  let component;
+  let component, doLike, doRemove;
 
   beforeEach(() => {
-    component = render(<Blog blog={blog} />);
+    doLike = jest.fn();
+    doRemove = jest.fn();
+    component = render(
+      <Blog blog={blog} handleLike={doLike} handleRemove={doRemove} />
+    );
   });
 
   test("Displaying a blog only renders its title and author by default", () => {
@@ -59,5 +63,16 @@ describe("<Blog />", () => {
 
     expect(component.container).not.toHaveTextContent(blog.url);
     expect(component.container).not.toHaveTextContent(`Likes ${blog.likes}`);
+  });
+
+  test("Like button is clicked twice", async () => {
+    const user = userEvent.setup();
+    const viewButton = screen.getByText("View");
+    await user.click(viewButton);
+    const likeButton = component.container.querySelector("#like-button");
+    await user.click(likeButton);
+    await user.click(likeButton);
+
+    expect(doLike.mock.calls).toHaveLength(2);
   });
 });
