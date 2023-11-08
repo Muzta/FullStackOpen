@@ -22,15 +22,15 @@ const App = () => {
     }, 5000);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const blogsList = await blogService.getAll();
-      blogsList.sort((b1, b2) => b2.likes - b1.likes);
-      setBlogs(blogsList);
-    };
+  const sortBloglist = (bloglist) =>
+    bloglist.sort((b1, b2) => b2.likes - b1.likes);
 
-    fetchData();
-  }, [blogs]);
+  useEffect(() => {
+    blogService.getAll().then((returnedBloglist) => {
+      sortBloglist(returnedBloglist);
+      setBlogs(returnedBloglist);
+    });
+  }, []);
 
   useEffect(() => {
     const localUserJSON = window.localStorage.getItem("loggedUser");
@@ -59,9 +59,8 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       blogFormRef.current.toggleVisibility();
-      await blogService.addBlog(blogObject);
-      // The app automatically renders all the blogs when setBlogs is called
-      setBlogs(blogs);
+      const returnedBlog = await blogService.addBlog(blogObject);
+      setBlogs(blogs.concat(returnedBlog));
       createNotification({ message: "A new blog was added" });
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
@@ -70,9 +69,12 @@ const App = () => {
 
   const likeBlog = async (blogObject) => {
     try {
-      await blogService.likeBlog(blogObject);
-      // As the blog is updated on the DB, calls setBlogs() to re-render the app and fetch the updated blog likes
-      setBlogs(blogs);
+      const returnedBlog = await blogService.likeBlog(blogObject);
+      const newBloglist = blogs.map((blog) =>
+        blog.id === returnedBlog.id ? returnedBlog : blog
+      );
+      sortBloglist(newBloglist);
+      setBlogs(newBloglist);
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
@@ -83,8 +85,8 @@ const App = () => {
       window.confirm(`Remove blog ${blogObject.title} by ${blogObject.author}`)
     ) {
       try {
+        setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
         await blogService.deleteBlog(blogObject);
-        setBlogs(blogs);
         createNotification({ message: `Blog ${blogObject.title} was removed` });
       } catch (error) {
         createNotification({ message: error.response.data.error, error: true });

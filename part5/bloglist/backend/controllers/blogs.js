@@ -19,6 +19,7 @@ blogsRouter.post("/", middleware.userExtractor, async (request, response) => {
   const result = await blog.save();
   user.blogs = user.blogs.concat(result._id);
   await user.save();
+  await result.populate("user", { username: 1, name: 1 });
   response.status(201).json(result);
 });
 
@@ -45,13 +46,15 @@ blogsRouter.delete(
 blogsRouter.put("/:id", async (request, response) => {
   const id = request.params.id;
   const body = request.body;
-  // If user data is provided, retain only its id. Otherwise, maintain the existing user id value
-  const blogpost = { ...body, user: body.user.id || body.user };
-
-  const updatedBlogpost = await Blog.findByIdAndUpdate(id, blogpost, {
+  // As the blog is saved with the userId on DB, get it and put it in as the user attribute
+  const blog = await Blog.findById(id);
+  const blogUserId = blog.user.toString();
+  const blogToUpdate = { ...body, user: blogUserId };
+  const returnedBlog = await Blog.findByIdAndUpdate(id, blogToUpdate, {
     new: true,
-  });
-  response.json(updatedBlogpost);
+  }).populate("user", { username: 1, name: 1 });
+
+  response.json(returnedBlog);
 });
 
 module.exports = blogsRouter;
