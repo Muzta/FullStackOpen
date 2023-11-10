@@ -13,6 +13,7 @@ const LoginForm = ({
         Username
         <input
           type="text"
+          id="username"
           value={username}
           name="Username"
           onChange={handleUsernameChange}
@@ -23,13 +24,16 @@ const LoginForm = ({
         Password
         <input
           type="password"
+          id="password"
           value={password}
           name="Password"
           onChange={handlePasswordChange}
         ></input>
       </div>
 
-      <button type="submit">Login</button>
+      <button id="login-button" type="submit">
+        Login
+      </button>
     </form>
   );
 };
