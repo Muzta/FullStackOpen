@@ -1,3 +1,14 @@
+/* eslint-disable linebreak-style */
+Cypress.Commands.add("login", ({ username, password }) => {
+  cy.request("POST", `${Cypress.env("BACKEND")}/login`, {
+    username,
+    password,
+  }).then(({ body }) => {
+    localStorage.setItem("loggedUser", JSON.stringify(body));
+    cy.visit("");
+  });
+});
+
 // ***********************************************
 // This example commands.js shows you how to
 // create various custom commands and overwrite

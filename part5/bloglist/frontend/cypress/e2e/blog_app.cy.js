@@ -1,9 +1,12 @@
 describe("Blog app", () => {
+  const NAME = "testName",
+    USERNAME = "testUsername",
+    PASSWORD = "testPassword";
   beforeEach(function () {
-    cy.request("POST", "http://localhost:3003/api/testing/reset");
-    const user = { name: "test", username: "test", password: "test" };
-    cy.request("POST", "http://localhost:3003/api/users/", user);
-    cy.visit("http://localhost:5173");
+    cy.request("POST", `${Cypress.env("BACKEND")}/testing/reset`);
+    const user = { name: NAME, username: USERNAME, password: PASSWORD };
+    cy.request("POST", `${Cypress.env("BACKEND")}/users/`, user);
+    cy.visit("");
   });
 
   it("Login form is shown", function () {
@@ -32,19 +35,72 @@ describe("Blog app", () => {
     };
 
     it("succeeds with correct credentials", function () {
-      checkLogin({ username: "test", password: "test" });
+      checkLogin({ username: USERNAME, password: PASSWORD });
     });
 
     it("fails with wrong password", function () {
-      checkLogin({ username: "test", password: "wrong", fails: true });
+      checkLogin({ username: USERNAME, password: "wrong", fails: true });
     });
 
     it("fails with wrong username", function () {
-      checkLogin({ username: "wrong", password: "test", fails: true });
+      checkLogin({ username: "wrong", password: PASSWORD, fails: true });
     });
 
     it("fails with wrong username and password", function () {
       checkLogin({ username: "wrong", password: "wrong", fails: true });
+    });
+  });
+
+  describe("When logged in", function () {
+    beforeEach(function () {
+      cy.login({ username: USERNAME, password: PASSWORD });
+      cy.contains("New blog").click();
+    });
+
+    const title = "New blog test",
+      author = "Test author",
+      url = "http://test.com";
+
+    const checkBlogCreation = ({ title, url, author = "", fails = false }) => {
+      if (title) cy.get("#blog-form").get("#title").type(title);
+      if (author) cy.get("#blog-form").get("#author").type(author);
+      if (url) cy.get("#blog-form").get("#url").type(url);
+      cy.get("#blog-form").get("#create").click();
+
+      if (fails) {
+        // Match the exact text i.e. there are no elements/blogs
+        cy.get("#blog-list").should("have.text", "");
+      } else {
+        cy.get(".notification")
+          .should("contain", "A new blog was added")
+          .and("have.css", "color", "rgb(0, 128, 0)")
+          .and("have.css", "border-style", "solid");
+        cy.get("#blog-list")
+          .contains(`${title} ${author}`)
+          .contains("View")
+          .click();
+        cy.get("#blog-content").contains(NAME);
+      }
+    };
+
+    it("A new blog can be created when all the attributes are given", function () {
+      checkBlogCreation({ title, author, url });
+    });
+
+    it("A new blog can be create if author missed", function () {
+      checkBlogCreation({ title, url });
+    });
+
+    it("A new blog fails if title missed", function () {
+      checkBlogCreation({ author, url, fails: true });
+    });
+
+    it("A new blog fails if url missed", function () {
+      checkBlogCreation({ title, author, fails: true });
+    });
+
+    afterEach(function () {
+      localStorage.clear();
     });
   });
 });
