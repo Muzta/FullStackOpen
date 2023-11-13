@@ -1,4 +1,10 @@
 /* eslint-disable linebreak-style */
+Cypress.Commands.add("signup", (user) => {
+  cy.request("POST", `${Cypress.env("BACKEND")}/users/`, user).then(() =>
+    cy.visit("")
+  );
+});
+
 Cypress.Commands.add("login", ({ username, password }) => {
   cy.request("POST", `${Cypress.env("BACKEND")}/login`, {
     username,

@@ -5,8 +5,7 @@ describe("Blog app", () => {
   beforeEach(function () {
     cy.request("POST", `${Cypress.env("BACKEND")}/testing/reset`);
     const user = { name: NAME, username: USERNAME, password: PASSWORD };
-    cy.request("POST", `${Cypress.env("BACKEND")}/users/`, user);
-    cy.visit("");
+    cy.signup(user);
   });
 
   it("Login form is shown", function () {
@@ -52,6 +51,10 @@ describe("Blog app", () => {
   });
 
   describe("When logged in", function () {
+    const title = "New blog test",
+      author = "Test author",
+      url = "http://test.com";
+
     beforeEach(function () {
       cy.login({ username: USERNAME, password: PASSWORD });
     });
@@ -60,10 +63,6 @@ describe("Blog app", () => {
       beforeEach(function () {
         cy.contains("New blog").click();
       });
-
-      const title = "New blog test",
-        author = "Test author",
-        url = "http://test.com";
 
       const checkBlogCreation = ({
         title,
@@ -109,33 +108,73 @@ describe("Blog app", () => {
       });
     });
 
-    describe.only("Like a blog", function () {
-      const title = "New blog test",
-        author = "Test author",
-        url = "http://test.com";
-
+    describe("Like a blog", function () {
       beforeEach(function () {
         cy.createBlog({ title, author, url });
-      });
 
-      it("succeeds when liked once", function () {
         cy.get("#blog-list")
           .contains(`${title} ${author}`)
           .contains("View")
           .click();
         cy.get("#blog-content").contains("Likes 0");
+      });
+
+      it("succeeds when liked once", function () {
         cy.get("#blog-content").get("#like-button").click();
         cy.get("#blog-content").contains("Likes 1");
       });
 
       it("succeeds when liked twice", function () {
+        cy.get("#blog-content").get("#like-button").click().click();
+        cy.get("#blog-content").contains("Likes 2");
+      });
+    });
+
+    describe("Delete a blog", function () {
+      beforeEach(function () {
+        cy.createBlog({ title, author, url });
+      });
+
+      const checkBlogDeletion = ({ title, author, fails = false }) => {
         cy.get("#blog-list")
           .contains(`${title} ${author}`)
           .contains("View")
           .click();
-        cy.get("#blog-content").contains("Likes 0");
-        cy.get("#blog-content").get("#like-button").click().click();
-        cy.get("#blog-content").contains("Likes 2");
+        cy.get("#blog-list").get("#blog-data").get("#remove-button").click();
+
+        if (fails) {
+          cy.get(".notification")
+            .should("contain", "Only blog owner can delete it")
+            .and("have.css", "color", "rgb(255, 0, 0)")
+            .and("have.css", "border-style", "solid");
+          cy.get("#blog-list").should("contain", `${title} ${author}`);
+        } else {
+          cy.get(".notification")
+            .should("contain", `Blog ${title} was removed`)
+            .and("have.css", "color", "rgb(0, 128, 0)")
+            .and("have.css", "border-style", "solid");
+          cy.get("#blog-list").should("have.text", "");
+        }
+      };
+
+      it("succeeds when user created it", function () {
+        checkBlogDeletion({ title, author });
+      });
+
+      it("fails if user didn't create it", function () {
+        // Register a new user
+        const user = {
+          name: `${NAME}2`,
+          username: `${USERNAME}2`,
+          password: `${PASSWORD}2`,
+        };
+        cy.signup(user);
+
+        // Logout current user and login new one
+        cy.get("#logout").click();
+        cy.login({ username: user.username, password: user.password });
+
+        checkBlogDeletion({ title, author, fails: true });
       });
     });
 

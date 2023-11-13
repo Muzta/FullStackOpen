@@ -85,8 +85,8 @@ const App = () => {
       window.confirm(`Remove blog ${blogObject.title} by ${blogObject.author}`)
     ) {
       try {
-        setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
         await blogService.deleteBlog(blogObject);
+        setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
         createNotification({ message: `Blog ${blogObject.title} was removed` });
       } catch (error) {
         createNotification({ message: error.response.data.error, error: true });
@@ -108,7 +108,9 @@ const App = () => {
         <div>
           <p>
             {user.username} logged in{" "}
-            <button onClick={handleLogout}>Log out</button>
+            <button id="logout" onClick={handleLogout}>
+              Log out
+            </button>
           </p>
 
           <Togglable
