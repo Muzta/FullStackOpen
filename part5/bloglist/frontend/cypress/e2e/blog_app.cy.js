@@ -140,15 +140,14 @@ describe("Blog app", () => {
           .contains(`${title} ${author}`)
           .contains("View")
           .click();
-        cy.get("#blog-list").get("#blog-data").get("#remove-button").click();
 
         if (fails) {
-          cy.get(".notification")
-            .should("contain", "Only blog owner can delete it")
-            .and("have.css", "color", "rgb(255, 0, 0)")
-            .and("have.css", "border-style", "solid");
+          cy.get("#blog-list")
+            .get("#blog-data")
+            .should("not.contain", "#remove-button");
           cy.get("#blog-list").should("contain", `${title} ${author}`);
         } else {
+          cy.get("#blog-list").get("#blog-data").get("#remove-button").click();
           cy.get(".notification")
             .should("contain", `Blog ${title} was removed`)
             .and("have.css", "color", "rgb(0, 128, 0)")
@@ -161,7 +160,7 @@ describe("Blog app", () => {
         checkBlogDeletion({ title, author });
       });
 
-      it("fails if user didn't create it", function () {
+      it("doesn't show remove button if user didnt't create it", function () {
         // Register a new user
         const user = {
           name: `${NAME}2`,
