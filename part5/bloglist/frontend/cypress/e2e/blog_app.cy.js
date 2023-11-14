@@ -2,6 +2,7 @@ describe("Blog app", () => {
   const NAME = "testName",
     USERNAME = "testUsername",
     PASSWORD = "testPassword";
+
   beforeEach(function () {
     cy.request("POST", `${Cypress.env("BACKEND")}/testing/reset`);
     const user = { name: NAME, username: USERNAME, password: PASSWORD };
@@ -143,11 +144,11 @@ describe("Blog app", () => {
 
         if (fails) {
           cy.get("#blog-list")
-            .get("#blog-data")
+            .get(".blog-data")
             .should("not.contain", "#remove-button");
           cy.get("#blog-list").should("contain", `${title} ${author}`);
         } else {
-          cy.get("#blog-list").get("#blog-data").get("#remove-button").click();
+          cy.get("#blog-list").get(".blog-data").get("#remove-button").click();
           cy.get(".notification")
             .should("contain", `Blog ${title} was removed`)
             .and("have.css", "color", "rgb(0, 128, 0)")
@@ -174,6 +175,72 @@ describe("Blog app", () => {
         cy.login({ username: user.username, password: user.password });
 
         checkBlogDeletion({ title, author, fails: true });
+      });
+    });
+
+    describe("Sort bloglist", function () {
+      const blog1 = { title: "Most liked blog", url, likes: 4 },
+        blog2 = { title: "Second most liked blog", url, likes: 3 },
+        blog3 = { title: "Third most liked blog", url, likes: 1 },
+        blog4 = { title: "Less liked blog", url, likes: 0 };
+
+      beforeEach(function () {
+        cy.createBlog(blog4);
+        cy.createBlog(blog1);
+        cy.createBlog(blog3);
+        cy.createBlog(blog2);
+      });
+
+      const checkBlogOrder = (blogs) => {
+        blogs.forEach((blog, index) => {
+          cy.get("#blog-list")
+            .get(".blog-data")
+            .eq(index)
+            .should("contain", blog.title);
+        });
+      };
+
+      it("succeeds at first render", function () {
+        checkBlogOrder([blog1, blog2, blog3, blog4]);
+      });
+
+      it("doesn't change order when like button is clicked till equal number likes", function () {
+        cy.get("#blog-list")
+          .get(".blog-data")
+          .contains(blog2.title)
+          .contains("View")
+          .click();
+        cy.get("#blog-content").get("#like-button").click();
+        checkBlogOrder([blog1, blog2, blog3, blog4]);
+      });
+
+      it("succeeds when second most liked get first place", function () {
+        cy.get("#blog-list")
+          .get(".blog-data")
+          .contains(blog2.title)
+          .contains("View")
+          .click();
+        cy.get("#blog-content").get("#like-button").click().click();
+        checkBlogOrder([blog2, blog1, blog3, blog4]);
+      });
+
+      it("succeeds when the least liked blog get first place", function () {
+        cy.get("#blog-list")
+          .get(".blog-data")
+          .contains(blog4.title)
+          .contains("View")
+          .click();
+        for (let i = 0; i < 5; i++) {
+          cy.get("#blog-content").get("#like-button").click();
+          cy.wait(500);
+        }
+        checkBlogOrder([blog4, blog1, blog2, blog3]);
+      });
+
+      it("succeeds when a new blog is added, and it's placed at last position", function () {
+        const blog5 = { title: "New blog without likes", url };
+        cy.createBlog(blog5);
+        checkBlogOrder([blog1, blog2, blog3, blog4, blog5]);
       });
     });
 
