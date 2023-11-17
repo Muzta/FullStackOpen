@@ -1,15 +1,15 @@
-/* eslint-disable indent */
-const filterReducer = (state = "", action) => {
-  switch (action.type) {
-    case "FILTER_ANECDOTE":
-      return action.payload.filter;
-    default:
-      return state;
-  }
-};
+import { createSlice } from "@reduxjs/toolkit";
 
-export const filterAnecdote = (filter) => {
-  return { type: "FILTER_ANECDOTE", payload: { filter } };
-};
+const filterSlice = createSlice({
+  name: "filter",
+  initialState: "",
+  reducers: {
+    filterAnecdote(state, action) {
+      const filter = action.payload;
+      return filter;
+    },
+  },
+});
 
-export default filterReducer;
+export const { filterAnecdote } = filterSlice.actions;
+export default filterSlice.reducer;
