@@ -1,4 +1,5 @@
-/* eslint-disable indent */
+import { createSlice } from "@reduxjs/toolkit";
+
 const anecdotesAtStart = [
   "If it hurts, do it more often",
   "Adding manpower to a late software project makes it later!",
@@ -20,34 +21,24 @@ const asObject = (anecdote) => {
 
 const initialState = anecdotesAtStart.map(asObject);
 
-const reducer = (state = initialState, action) => {
-  console.log("state now: ", state);
-  console.log("action", action);
-  switch (action.type) {
-    case "VOTE": {
-      const id = action.payload.id;
+const anecdotesSlice = createSlice({
+  name: "anecdotes",
+  initialState,
+  reducers: {
+    voteAnecdote(state, action) {
+      const id = action.payload;
       const anecdote = state.find((a) => a.id === id);
       const updatedAnecdote = { ...anecdote, votes: anecdote.votes + 1 };
       return state.map((anecdote) =>
         anecdote.id === id ? updatedAnecdote : anecdote
       );
-    }
+    },
+    createAnecdote(state, action) {
+      const anecdote = asObject(action.payload);
+      state.push(anecdote);
+    },
+  },
+});
 
-    case "NEW_ANECDOTE": {
-      return [...state, action.payload];
-    }
-
-    default:
-      return state;
-  }
-};
-
-export default reducer;
-
-export const voteAnecdote = (id) => {
-  return { type: "VOTE", payload: { id } };
-};
-
-export const createAnecdote = (content) => {
-  return { type: "NEW_ANECDOTE", payload: asObject(content) };
-};
+export const { voteAnecdote, createAnecdote } = anecdotesSlice.actions;
+export default anecdotesSlice.reducer;
