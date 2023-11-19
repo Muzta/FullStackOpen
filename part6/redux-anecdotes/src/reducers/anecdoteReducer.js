@@ -20,7 +20,7 @@ const anecdotesSlice = createSlice({
   },
 });
 
-export const { anecdoteVotesPlusOne, appendAnecdote, setAnecdotes } =
+const { anecdoteVotesPlusOne, appendAnecdote, setAnecdotes } =
   anecdotesSlice.actions;
 
 export const initializeAnecdotes = () => {
