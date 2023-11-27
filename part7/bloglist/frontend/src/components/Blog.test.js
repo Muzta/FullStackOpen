@@ -27,8 +27,8 @@ describe("<Blog />", () => {
   });
 
   test("Displaying a blog only renders its title and author by default", () => {
-    const blogData = component.container.querySelector("#blog-data");
-    const blogContent = component.container.querySelector("#blog-content");
+    const blogData = component.container.querySelector(".blog-data");
+    const blogContent = component.container.querySelector(".blog-content");
 
     expect(blogData).toHaveTextContent(blog.title);
     expect(blogData).not.toHaveTextContent("http://test.com");
@@ -69,7 +69,7 @@ describe("<Blog />", () => {
     const user = userEvent.setup();
     const viewButton = screen.getByText("View");
     await user.click(viewButton);
-    const likeButton = component.container.querySelector("#like-button");
+    const likeButton = component.container.querySelector(".like-button");
     await user.click(likeButton);
     await user.click(likeButton);
 

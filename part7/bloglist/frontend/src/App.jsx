@@ -6,20 +6,21 @@ import Notification from "./components/Notification";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
+import { useDispatch, useSelector } from "react-redux";
+import { setNotification } from "./reducers/notificationReducer";
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const [notification, setNotification] = useState({});
   const blogFormRef = useRef();
 
-  const createNotification = ({ message, error = false }) => {
-    setNotification({ message, error });
-    setTimeout(() => {
-      setNotification({});
-    }, 5000);
+  const dispatch = useDispatch();
+  const notification = useSelector((state) => state.notification);
+
+  const createNotification = ({ message, timeout = 5, error = false }) => {
+    dispatch(setNotification({ message, timeout, error }));
   };
 
   const sortBloglist = (bloglist) =>
@@ -61,7 +62,9 @@ const App = () => {
       blogFormRef.current.toggleVisibility();
       const returnedBlog = await blogService.addBlog(blogObject);
       setBlogs(blogs.concat(returnedBlog));
-      createNotification({ message: "A new blog was added" });
+      createNotification({
+        message: `New blog "${blogObject.title}" was added`,
+      });
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
@@ -82,12 +85,16 @@ const App = () => {
 
   const deleteBlog = async (blogObject) => {
     if (
-      window.confirm(`Remove blog ${blogObject.title} by ${blogObject.author}`)
+      window.confirm(
+        `Remove blog "${blogObject.title}" by ${blogObject.author}`
+      )
     ) {
       try {
         await blogService.deleteBlog(blogObject);
         setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
-        createNotification({ message: `Blog ${blogObject.title} was removed` });
+        createNotification({
+          message: `Blog "${blogObject.title}" was removed`,
+        });
       } catch (error) {
         createNotification({ message: error.response.data.error, error: true });
       }
