@@ -12,10 +12,10 @@ import {
   addNewBlog,
   initializeBloglist,
   likeBlog,
+  deleteBlog,
 } from "./reducers/blogReducer";
 
 const App = () => {
-  // const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
@@ -78,15 +78,14 @@ const App = () => {
     }
   };
 
-  const deleteBlog = async (blogObject) => {
+  const removeBlog = async (blogObject) => {
     if (
       window.confirm(
         `Remove blog "${blogObject.title}" by ${blogObject.author}`
       )
     ) {
       try {
-        await blogService.deleteBlog(blogObject);
-        // setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
+        dispatch(deleteBlog(blogObject));
         createNotification({
           message: `Blog "${blogObject.title}" was removed`,
         });
@@ -130,7 +129,7 @@ const App = () => {
                   key={blog.id}
                   blog={blog}
                   handleLike={() => incrementLikes(blog)}
-                  handleRemove={() => deleteBlog(blog)}
+                  handleRemove={() => removeBlog(blog)}
                   loggedUsername={user.username}
                 />
               );
