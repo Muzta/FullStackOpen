@@ -8,30 +8,24 @@ import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotification } from "./reducers/notificationReducer";
+import { addNewBlog, initializeBloglist } from "./reducers/blogReducer";
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]);
+  // const [blogs, setBlogs] = useState([]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
   const blogFormRef = useRef();
 
   const dispatch = useDispatch();
-  const notification = useSelector((state) => state.notification);
 
   const createNotification = ({ message, timeout = 5, error = false }) => {
     dispatch(setNotification({ message, timeout, error }));
   };
 
-  const sortBloglist = (bloglist) =>
-    bloglist.sort((b1, b2) => b2.likes - b1.likes);
-
   useEffect(() => {
-    blogService.getAll().then((returnedBloglist) => {
-      sortBloglist(returnedBloglist);
-      setBlogs(returnedBloglist);
-    });
-  }, []);
+    dispatch(initializeBloglist());
+  }, [dispatch]);
 
   useEffect(() => {
     const localUserJSON = window.localStorage.getItem("loggedUser");
@@ -41,6 +35,9 @@ const App = () => {
       blogService.setToken(localUser.token);
     }
   }, []);
+
+  const notification = useSelector((state) => state.notification);
+  const blogs = useSelector((state) => state.blogs);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -60,8 +57,7 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       blogFormRef.current.toggleVisibility();
-      const returnedBlog = await blogService.addBlog(blogObject);
-      setBlogs(blogs.concat(returnedBlog));
+      dispatch(addNewBlog(blogObject));
       createNotification({
         message: `New blog "${blogObject.title}" was added`,
       });
@@ -76,8 +72,8 @@ const App = () => {
       const newBloglist = blogs.map((blog) =>
         blog.id === returnedBlog.id ? returnedBlog : blog
       );
-      sortBloglist(newBloglist);
-      setBlogs(newBloglist);
+      // sortBloglist(newBloglist);
+      // setBlogs(newBloglist);
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
@@ -91,7 +87,7 @@ const App = () => {
     ) {
       try {
         await blogService.deleteBlog(blogObject);
-        setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
+        // setBlogs(blogs.filter((blog) => blog.id !== blogObject.id));
         createNotification({
           message: `Blog "${blogObject.title}" was removed`,
         });
@@ -129,15 +125,17 @@ const App = () => {
           </Togglable>
 
           <div id="blog-list">
-            {blogs.map((blog) => (
-              <Blog
-                key={blog.id}
-                blog={blog}
-                handleLike={() => likeBlog(blog)}
-                handleRemove={() => deleteBlog(blog)}
-                loggedUsername={user.username}
-              />
-            ))}
+            {blogs.map((blog) => {
+              return (
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  handleLike={() => likeBlog(blog)}
+                  handleRemove={() => deleteBlog(blog)}
+                  loggedUsername={user.username}
+                />
+              );
+            })}
           </div>
         </div>
       ) : (
