@@ -8,7 +8,11 @@ import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
 import { setNotification } from "./reducers/notificationReducer";
-import { addNewBlog, initializeBloglist } from "./reducers/blogReducer";
+import {
+  addNewBlog,
+  initializeBloglist,
+  likeBlog,
+} from "./reducers/blogReducer";
 
 const App = () => {
   // const [blogs, setBlogs] = useState([]);
@@ -66,14 +70,9 @@ const App = () => {
     }
   };
 
-  const likeBlog = async (blogObject) => {
+  const incrementLikes = async (blogObject) => {
     try {
-      const returnedBlog = await blogService.likeBlog(blogObject);
-      const newBloglist = blogs.map((blog) =>
-        blog.id === returnedBlog.id ? returnedBlog : blog
-      );
-      // sortBloglist(newBloglist);
-      // setBlogs(newBloglist);
+      dispatch(likeBlog(blogObject));
     } catch (error) {
       createNotification({ message: error.response.data.error, error: true });
     }
@@ -130,7 +129,7 @@ const App = () => {
                 <Blog
                   key={blog.id}
                   blog={blog}
-                  handleLike={() => likeBlog(blog)}
+                  handleLike={() => incrementLikes(blog)}
                   handleRemove={() => deleteBlog(blog)}
                   loggedUsername={user.username}
                 />

@@ -15,10 +15,20 @@ const blogSlice = createSlice({
       );
       return sortedBloglist;
     },
+    likeBlogById(state, action) {
+      const likedBlogId = action.payload;
+      const blogToLike = state.find((blog) => blog.id === likedBlogId);
+      const likedBlog = { ...blogToLike, likes: blogToLike.likes + 1 };
+      const newState = state.map((blog) =>
+        blog.id === likedBlogId ? likedBlog : blog
+      );
+      newState.sort((b1, b2) => b2.likes - b1.likes);
+      return newState;
+    },
   },
 });
 
-const { appendBlog, setBloglist } = blogSlice.actions;
+const { appendBlog, setBloglist, likeBlogById } = blogSlice.actions;
 
 export const initializeBloglist = () => {
   return async (dispatch) => {
@@ -31,6 +41,13 @@ export const addNewBlog = (blog) => {
   return async (dispatch) => {
     const newBlog = await blogService.addBlog(blog);
     dispatch(appendBlog(newBlog));
+  };
+};
+
+export const likeBlog = (blog) => {
+  return async (dispatch) => {
+    const returnedBlog = await blogService.likeBlog(blog);
+    dispatch(likeBlogById(returnedBlog.id));
   };
 };
 
