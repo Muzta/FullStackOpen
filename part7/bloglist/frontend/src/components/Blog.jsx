@@ -1,10 +1,11 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Togglable from "./Togglable.jsx";
 import { likeBlog, deleteBlog } from "../reducers/blogReducer.js";
 import { createNotification } from "../reducers/notificationReducer.js";
 
-const Blog = ({ blog, loggedUsername }) => {
+const Blog = ({ blog }) => {
   const dispatch = useDispatch();
+  const loggedUsername = useSelector((state) => state.user.username);
 
   const incrementLikes = async (blogObject) => {
     try {

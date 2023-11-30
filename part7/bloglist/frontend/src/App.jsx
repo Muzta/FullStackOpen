@@ -1,19 +1,15 @@
 import { useState, useEffect } from "react";
 import Blog from "./components/Blog";
-import blogService from "./services/blogs";
-import loginService from "./services/login";
 import Notification from "./components/Notification";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import { useDispatch, useSelector } from "react-redux";
-import { createNotification } from "./reducers/notificationReducer";
 import { initializeBloglist } from "./reducers/blogReducer";
+import { fetchLoggedUser, login, logout } from "./reducers/userReducer";
 
 const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -21,38 +17,23 @@ const App = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const localUserJSON = window.localStorage.getItem("loggedUser");
-    if (localUserJSON) {
-      const localUser = JSON.parse(localUserJSON);
-      setUser(localUser);
-      blogService.setToken(localUser.token);
-    }
-  }, []);
+    dispatch(fetchLoggedUser());
+  }, [dispatch]);
 
   const notification = useSelector((state) => state.notification);
   const blogs = useSelector((state) => state.blogs);
+  const user = useSelector((state) => state.user);
 
-  const handleLogin = async (event) => {
+  const handleLogin = (event) => {
     event.preventDefault();
 
-    try {
-      const user = await loginService.login({ username, password });
-      window.localStorage.setItem("loggedUser", JSON.stringify(user));
-      setUser(user);
-      blogService.setToken(user.token);
-      setUsername("");
-      setPassword("");
-    } catch (error) {
-      dispatch(
-        createNotification({ message: error.response.data.error, error: true })
-      );
-    }
+    dispatch(login({ username, password }));
+    setUsername("");
+    setPassword("");
   };
 
   const handleLogout = () => {
-    window.localStorage.clear();
-    setUser(null);
-    blogService.setToken(null);
+    dispatch(logout());
   };
 
   return (
@@ -72,13 +53,7 @@ const App = () => {
 
           <div id="blog-list">
             {blogs.map((blog) => {
-              return (
-                <Blog
-                  key={blog.id}
-                  blog={blog}
-                  loggedUsername={user.username}
-                />
-              );
+              return <Blog key={blog.id} blog={blog} />;
             })}
           </div>
         </div>
