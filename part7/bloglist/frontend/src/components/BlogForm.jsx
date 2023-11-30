@@ -1,18 +1,37 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Togglable from "./Togglable";
+import { useDispatch } from "react-redux";
+import { addNewBlog } from "../reducers/blogReducer";
+import { createNotification } from "../reducers/notificationReducer";
 
-const BlogForm = ({ createBlog }) => {
-  const blogStructure = {
+const BlogForm = () => {
+  const blogFormRef = useRef();
+  const dispatch = useDispatch();
+
+  const blogInitialState = {
     title: "",
     author: "",
     url: "",
   };
 
-  const [newBlog, setNewBlog] = useState(blogStructure);
+  const [newBlog, setNewBlog] = useState(blogInitialState);
 
-  const addBlog = (event) => {
-    event.preventDefault();
-    createBlog(newBlog);
-    setNewBlog(blogStructure);
+  const createBlog = (event) => {
+    try {
+      event.preventDefault();
+      dispatch(addNewBlog(newBlog));
+      blogFormRef.current.toggleVisibility();
+      dispatch(
+        createNotification({
+          message: `New blog "${newBlog.title}" was added`,
+        })
+      );
+      setNewBlog(blogInitialState);
+    } catch (error) {
+      dispatch(
+        createNotification({ message: error.response.data.error, error: true })
+      );
+    }
   };
 
   const handleBlogChanges = (event) => {
@@ -24,48 +43,50 @@ const BlogForm = ({ createBlog }) => {
   };
 
   return (
-    <div>
-      <form id="blog-form" onSubmit={addBlog}>
-        <div>
-          Title:
-          <input
-            type="text"
-            value={newBlog.title}
-            name="title"
-            id="title"
-            onChange={handleBlogChanges}
-            required
-          ></input>
-        </div>
+    <Togglable buttonLabel="New blog" hideLabel="Cancel" ref={blogFormRef}>
+      <div>
+        <form id="blog-form" onSubmit={createBlog}>
+          <div>
+            Title:
+            <input
+              type="text"
+              value={newBlog.title}
+              name="title"
+              id="title"
+              onChange={handleBlogChanges}
+              required
+            ></input>
+          </div>
 
-        <div>
-          Author:
-          <input
-            type="text"
-            value={newBlog.author}
-            name="author"
-            id="author"
-            onChange={handleBlogChanges}
-          ></input>
-        </div>
+          <div>
+            Author:
+            <input
+              type="text"
+              value={newBlog.author}
+              name="author"
+              id="author"
+              onChange={handleBlogChanges}
+            ></input>
+          </div>
 
-        <div>
-          Url:
-          <input
-            type="url"
-            value={newBlog.url}
-            name="url"
-            id="url"
-            onChange={handleBlogChanges}
-            required
-          ></input>
-        </div>
+          <div>
+            Url:
+            <input
+              type="url"
+              value={newBlog.url}
+              name="url"
+              id="url"
+              onChange={handleBlogChanges}
+              required
+            ></input>
+          </div>
 
-        <button id="create" type="submit">
-          Create
-        </button>
-      </form>
-    </div>
+          <button id="create" type="submit">
+            Create
+          </button>
+        </form>
+      </div>
+    </Togglable>
   );
 };
 

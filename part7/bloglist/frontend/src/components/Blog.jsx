@@ -1,6 +1,45 @@
+import { useDispatch } from "react-redux";
 import Togglable from "./Togglable.jsx";
+import { likeBlog, deleteBlog } from "../reducers/blogReducer.js";
+import { createNotification } from "../reducers/notificationReducer.js";
 
-const Blog = ({ blog, handleLike, handleRemove, loggedUsername }) => {
+const Blog = ({ blog, loggedUsername }) => {
+  const dispatch = useDispatch();
+
+  const incrementLikes = async (blogObject) => {
+    try {
+      dispatch(likeBlog(blogObject));
+    } catch (error) {
+      dispatch(
+        createNotification({ message: error.response.data.error, error: true })
+      );
+    }
+  };
+
+  const removeBlog = async (blogObject) => {
+    if (
+      window.confirm(
+        `Remove blog "${blogObject.title}" by ${blogObject.author}`
+      )
+    ) {
+      try {
+        dispatch(deleteBlog(blogObject));
+        dispatch(
+          createNotification({
+            message: `Blog "${blogObject.title}" was removed`,
+          })
+        );
+      } catch (error) {
+        dispatch(
+          createNotification({
+            message: error.response.data.error,
+            error: true,
+          })
+        );
+      }
+    }
+  };
+
   const blogStyle = {
     paddingTop: 10,
     paddingLeft: 2,
@@ -17,14 +56,14 @@ const Blog = ({ blog, handleLike, handleRemove, loggedUsername }) => {
           {blog.url}
           <br></br>
           Likes {blog.likes}{" "}
-          <button className="like-button" onClick={handleLike}>
+          <button className="like-button" onClick={() => incrementLikes(blog)}>
             Like
           </button>
           <br></br>
           {blog.user.name}
           <br></br>
           {loggedUsername === blog.user.username ? (
-            <button className="remove-button" onClick={handleRemove}>
+            <button className="remove-button" onClick={() => removeBlog(blog)}>
               Remove
             </button>
           ) : null}

@@ -1,31 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Blog from "./components/Blog";
 import blogService from "./services/blogs";
 import loginService from "./services/login";
 import Notification from "./components/Notification";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
-import Togglable from "./components/Togglable";
 import { useDispatch, useSelector } from "react-redux";
-import { setNotification } from "./reducers/notificationReducer";
-import {
-  addNewBlog,
-  initializeBloglist,
-  likeBlog,
-  deleteBlog,
-} from "./reducers/blogReducer";
+import { createNotification } from "./reducers/notificationReducer";
+import { initializeBloglist } from "./reducers/blogReducer";
 
 const App = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null);
-  const blogFormRef = useRef();
 
   const dispatch = useDispatch();
-
-  const createNotification = ({ message, timeout = 5, error = false }) => {
-    dispatch(setNotification({ message, timeout, error }));
-  };
 
   useEffect(() => {
     dispatch(initializeBloglist());
@@ -54,44 +43,9 @@ const App = () => {
       setUsername("");
       setPassword("");
     } catch (error) {
-      createNotification({ message: error.response.data.error, error: true });
-    }
-  };
-
-  const addBlog = async (blogObject) => {
-    try {
-      blogFormRef.current.toggleVisibility();
-      dispatch(addNewBlog(blogObject));
-      createNotification({
-        message: `New blog "${blogObject.title}" was added`,
-      });
-    } catch (error) {
-      createNotification({ message: error.response.data.error, error: true });
-    }
-  };
-
-  const incrementLikes = async (blogObject) => {
-    try {
-      dispatch(likeBlog(blogObject));
-    } catch (error) {
-      createNotification({ message: error.response.data.error, error: true });
-    }
-  };
-
-  const removeBlog = async (blogObject) => {
-    if (
-      window.confirm(
-        `Remove blog "${blogObject.title}" by ${blogObject.author}`
-      )
-    ) {
-      try {
-        dispatch(deleteBlog(blogObject));
-        createNotification({
-          message: `Blog "${blogObject.title}" was removed`,
-        });
-      } catch (error) {
-        createNotification({ message: error.response.data.error, error: true });
-      }
+      dispatch(
+        createNotification({ message: error.response.data.error, error: true })
+      );
     }
   };
 
@@ -114,13 +68,7 @@ const App = () => {
             </button>
           </p>
 
-          <Togglable
-            buttonLabel="New blog"
-            hideLabel="Cancel"
-            ref={blogFormRef}
-          >
-            <BlogForm createBlog={addBlog} />
-          </Togglable>
+          <BlogForm />
 
           <div id="blog-list">
             {blogs.map((blog) => {
@@ -128,8 +76,6 @@ const App = () => {
                 <Blog
                   key={blog.id}
                   blog={blog}
-                  handleLike={() => incrementLikes(blog)}
-                  handleRemove={() => removeBlog(blog)}
                   loggedUsername={user.username}
                 />
               );
