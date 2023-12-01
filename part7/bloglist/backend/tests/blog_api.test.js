@@ -90,7 +90,7 @@ describe("Creating a new blog post", () => {
     const titles = blogsAtEnd.map((blog) => blog.title);
     expect(titles).toContainEqual(newBlog.title);
     expect(response.body).toBeDefined();
-    expect(response.body.user).toBe(ownerId);
+    expect(response.body.user.id).toBe(ownerId);
     return response;
   };
 
@@ -250,7 +250,7 @@ describe("Updating a blog post", () => {
     expect(updatedBlog.title && updatedBlog.url).toBeDefined();
   });
 
-  test("succeeds with code 200 if id is valid but not in db", async () => {
+  test("erro 404 if id is valid but not in db", async () => {
     const startingBlogs = await helper.blogsInDb();
     const existingId = startingBlogs[0].id;
     const inventedId = existingId.slice(0, -3) + "000";
@@ -258,8 +258,8 @@ describe("Updating a blog post", () => {
     const response = await api
       .put(`/api/blogs/${inventedId}`)
       .send(blogToUpdateProperties)
-      .expect(200);
-    expect(response.body).toBeNull();
+      .expect(404);
+    expect(response.body.error).toBe("Blog not found");
   });
 
   test("error 400 if id has an invalid format", async () => {

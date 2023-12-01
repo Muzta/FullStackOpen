@@ -48,6 +48,8 @@ blogsRouter.put("/:id", async (request, response) => {
   const body = request.body;
   // As the blog is saved with the userId on DB, get it and put it in as the user attribute
   const blog = await Blog.findById(id);
+  if (!blog) return response.status(404).json({ error: "Blog not found" });
+
   const blogUserId = blog.user.toString();
   const blogToUpdate = { ...body, user: blogUserId };
   const returnedBlog = await Blog.findByIdAndUpdate(id, blogToUpdate, {
