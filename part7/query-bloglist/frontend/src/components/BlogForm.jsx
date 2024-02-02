@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useCreateNotification } from "../NotificationContext";
+import { addBlog } from "../requests";
 
-const BlogForm = ({ createBlog }) => {
+const BlogForm = ({ blogFormRef }) => {
   const blogStructure = {
     title: "",
     author: "",
     url: "",
   };
 
+  const queryClient = useQueryClient();
+  const createNotification = useCreateNotification();
   const [newBlog, setNewBlog] = useState(blogStructure);
 
-  const addBlog = (event) => {
-    event.preventDefault();
-    createBlog(newBlog);
-    setNewBlog(blogStructure);
-  };
+  const newBlogMutation = useMutation({
+    mutationFn: addBlog,
+    onSuccess: (newBlog) => {
+      const blogs = queryClient.getQueryData(["blogs"]);
+      queryClient.setQueryData(["blogs"], blogs.concat(newBlog));
+      createNotification({ message: "A new blog was added" });
+    },
+  });
 
   const handleBlogChanges = (event) => {
     const { name, value } = event.target;
@@ -23,9 +31,26 @@ const BlogForm = ({ createBlog }) => {
     });
   };
 
+  const onCreate = (event) => {
+    try {
+      event.preventDefault();
+      const blog = {};
+      // Assign each value of the form elements to the new blog object
+      const formElements = new FormData(event.target);
+      formElements.forEach((value, key) => (blog[key] = value));
+      // Reset the blog values
+      setNewBlog(blogStructure);
+      newBlogMutation.mutate(blog);
+
+      blogFormRef.current.toggleVisibility();
+    } catch (error) {
+      createNotification({ message: error.response.data.error, error: true });
+    }
+  };
+
   return (
     <div>
-      <form id="blog-form" onSubmit={addBlog}>
+      <form id="blog-form" onSubmit={onCreate}>
         <div>
           Title:
           <input

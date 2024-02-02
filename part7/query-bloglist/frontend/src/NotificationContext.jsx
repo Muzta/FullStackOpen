@@ -20,8 +20,15 @@ export const NotificationContextProvider = (props) => {
     ""
   );
 
+  const createNotification = ({ message, error = false }) => {
+    notificationDispatch({ type: "CREATE", payload: { message, error } });
+    setTimeout(() => {
+      notificationDispatch({ type: "CLEAR" });
+    }, 5000);
+  };
+
   return (
-    <NotificationContext.Provider value={[notification, notificationDispatch]}>
+    <NotificationContext.Provider value={[notification, createNotification]}>
       {props.children}
     </NotificationContext.Provider>
   );
@@ -34,7 +41,7 @@ export const useNotificationValue = () => {
   return notificationAndDispatch[0];
 };
 
-export const useNotificationDispatch = () => {
+export const useCreateNotification = () => {
   const notificationAndDispatch = useContext(NotificationContext);
   return notificationAndDispatch[1];
 };
