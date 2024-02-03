@@ -15,3 +15,16 @@ export const addBlog = async (blog) => {
   const response = await axios.post(baseUrl, blog, config);
   return response.data;
 };
+
+export const deleteBlog = async (blog) => {
+  const blogUrl = `${baseUrl}/${blog.id}`;
+  const response = await axios.delete(blogUrl, config);
+  return response.data;
+};
+
+export const likeBlog = async (blog) => {
+  const blogUrl = `${baseUrl}/${blog.id}`;
+  const updatedBlog = { ...blog, likes: blog.likes + 1 };
+  const response = await axios.put(blogUrl, updatedBlog);
+  return response.data;
+};

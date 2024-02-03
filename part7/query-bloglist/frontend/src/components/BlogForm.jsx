@@ -20,6 +20,10 @@ const BlogForm = ({ blogFormRef }) => {
       const blogs = queryClient.getQueryData(["blogs"]);
       queryClient.setQueryData(["blogs"], blogs.concat(newBlog));
       createNotification({ message: "A new blog was added" });
+      blogFormRef.current.toggleVisibility();
+    },
+    onError: (error) => {
+      createNotification({ message: error.response.data.error, error: true });
     },
   });
 
@@ -32,20 +36,14 @@ const BlogForm = ({ blogFormRef }) => {
   };
 
   const onCreate = (event) => {
-    try {
-      event.preventDefault();
-      const blog = {};
-      // Assign each value of the form elements to the new blog object
-      const formElements = new FormData(event.target);
-      formElements.forEach((value, key) => (blog[key] = value));
-      // Reset the blog values
-      setNewBlog(blogStructure);
-      newBlogMutation.mutate(blog);
-
-      blogFormRef.current.toggleVisibility();
-    } catch (error) {
-      createNotification({ message: error.response.data.error, error: true });
-    }
+    event.preventDefault();
+    const blog = {};
+    // Assign each value of the form elements to the new blog object
+    const formElements = new FormData(event.target);
+    formElements.forEach((value, key) => (blog[key] = value));
+    // Reset the blog values
+    setNewBlog(blogStructure);
+    newBlogMutation.mutate(blog);
   };
 
   return (
