@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useCreateNotification } from "../NotificationContext";
+import { useCreateNotification } from "../contexts/NotificationContext.jsx";
 import { addBlog } from "../requests";
 
 const BlogForm = ({ blogFormRef }) => {

@@ -1,21 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import Blog from "./components/Blog";
-import blogService from "./services/blogs";
 import loginService from "./services/login";
 import Notification from "./components/Notification";
 import LoginForm from "./components/LoginForm";
 import BlogForm from "./components/BlogForm";
 import Togglable from "./components/Togglable";
 import { useQuery } from "@tanstack/react-query";
-import { useCreateNotification } from "./NotificationContext";
+import { useCreateNotification } from "./contexts/NotificationContext.jsx";
 import { getBlogs, setToken } from "./requests";
+import {
+  useLoggedUserDispatch,
+  useLoggedUserValue,
+} from "./contexts/LoggedUserContext.jsx";
 
 const App = () => {
   const createNotification = useCreateNotification();
+  const loggedUserDispatch = useLoggedUserDispatch();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState(null);
+  const loggedUser = useLoggedUserValue();
   const blogFormRef = useRef();
 
   const getBlogsResult = useQuery({
@@ -31,10 +35,11 @@ const App = () => {
     const localUserJSON = window.localStorage.getItem("loggedUser");
     if (localUserJSON) {
       const localUser = JSON.parse(localUserJSON);
-      setUser(localUser);
+      loggedUserDispatch({ type: "SET_USER", payload: localUser });
       setToken(localUser.token);
+      loggedUserDispatch({ type: "SET_TOKEN", payload: localUser.token });
     }
-  }, []);
+  }, [loggedUserDispatch]);
 
   if (getBlogsResult.isLoading) return <div>Loading data...</div>;
 
@@ -46,7 +51,7 @@ const App = () => {
     try {
       const user = await loginService.login({ username, password });
       window.localStorage.setItem("loggedUser", JSON.stringify(user));
-      setUser(user);
+      loggedUserDispatch({ type: "SET_USER", payload: user });
       setToken(user.token);
       setUsername("");
       setPassword("");
@@ -56,19 +61,18 @@ const App = () => {
   };
 
   const handleLogout = () => {
+    loggedUserDispatch({ type: "LOGOUT" });
     window.localStorage.clear();
-    setUser(null);
-    setToken(null);
   };
 
   return (
     <div>
       <Notification />
       <h2>Blogs</h2>
-      {user ? (
+      {loggedUser ? (
         <div>
           <p>
-            {user.username} logged in{" "}
+            {loggedUser.username} logged in{" "}
             <button id="logout" onClick={handleLogout}>
               Log out
             </button>
@@ -84,7 +88,11 @@ const App = () => {
 
           <div id="blog-list">
             {blogs.map((blog) => (
-              <Blog key={blog.id} blog={blog} loggedUsername={user.username} />
+              <Blog
+                key={blog.id}
+                blog={blog}
+                loggedUsername={loggedUser.username}
+              />
             ))}
           </div>
         </div>

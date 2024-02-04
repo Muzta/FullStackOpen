@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Togglable from "./Togglable.jsx";
 import { deleteBlog, likeBlog } from "../requests";
-import { useCreateNotification } from "../NotificationContext.jsx";
+import { useCreateNotification } from "../contexts/NotificationContext.jsx";
 
 const Blog = ({ blog, loggedUsername }) => {
   const queryClient = useQueryClient();

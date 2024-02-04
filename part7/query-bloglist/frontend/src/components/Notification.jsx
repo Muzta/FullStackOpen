@@ -1,4 +1,4 @@
-import { useNotificationValue } from "../NotificationContext";
+import { useNotificationValue } from "../contexts/NotificationContext.jsx";
 
 const Notification = () => {
   const notification = useNotificationValue();
