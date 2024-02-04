@@ -1,5 +1,5 @@
 /* eslint-disable indent */
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useReducer } from "react";
 
 const notificationReducer = (state, action) => {
   switch (action.type) {
@@ -35,13 +35,3 @@ export const NotificationContextProvider = (props) => {
 };
 
 export default NotificationContext;
-
-export const useNotificationValue = () => {
-  const notificationAndDispatch = useContext(NotificationContext);
-  return notificationAndDispatch[0];
-};
-
-export const useCreateNotification = () => {
-  const notificationAndDispatch = useContext(NotificationContext);
-  return notificationAndDispatch[1];
-};

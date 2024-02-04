@@ -1,5 +1,5 @@
 /* eslint-disable indent */
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useReducer } from "react";
 
 const initialState = null;
 
@@ -30,13 +30,3 @@ export const LoggedUserContextProvider = (props) => {
 };
 
 export default LoggedUserContext;
-
-export const useLoggedUserValue = () => {
-  const loggedUserAndDispatch = useContext(LoggedUserContext);
-  return loggedUserAndDispatch[0];
-};
-
-export const useLoggedUserDispatch = () => {
-  const loggedUserAndDispatch = useContext(LoggedUserContext);
-  return loggedUserAndDispatch[1];
-};
