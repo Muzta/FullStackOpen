@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import BlogForm from "./components/BlogForm";
 import BlogList from "./components/BlogList";
 import LoginForm from "./components/LoginForm";
 import Notification from "./components/Notification";
-import UsersView from "./components/UsersView";
+import UsersViewAll from "./components/UsersViewAll";
 import { initializeBloglist } from "./reducers/blogReducer";
 import { fetchLoggedUser, logout } from "./reducers/userReducer";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import UsersViewSingle from "./components/UsersViewSingle";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -34,7 +35,8 @@ const App = () => {
             </p>
 
             <Routes>
-              <Route path="/users" element={<UsersView />} />
+              <Route path="/users/:id" element={<UsersViewSingle />} />
+              <Route path="/users" element={<UsersViewAll />} />
               <Route
                 path="/"
                 element={
