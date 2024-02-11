@@ -3,7 +3,7 @@ import { isEmpty } from "lodash";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-const UsersView = () => {
+const UsersViewAll = () => {
   const usersView = useSelector((state) => state.usersView);
 
   if (isEmpty(usersView)) return null;
@@ -34,4 +34,4 @@ const UsersView = () => {
   );
 };
 
-export default UsersView;
+export default UsersViewAll;

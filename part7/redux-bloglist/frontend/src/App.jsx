@@ -5,11 +5,12 @@ import Blog from "./components/Blog";
 import BlogForm from "./components/BlogForm";
 import BlogList from "./components/BlogList";
 import LoginForm from "./components/LoginForm";
+import NavigationMenu from "./components/NavigationMenu";
 import Notification from "./components/Notification";
 import UsersViewAll from "./components/UsersViewAll";
 import UsersViewSingle from "./components/UsersViewSingle";
 import { initializeBloglist } from "./reducers/blogReducer";
-import { fetchLoggedUser, logout } from "./reducers/userReducer";
+import { fetchLoggedUser } from "./reducers/userReducer";
 import { initializeUsersDictionary } from "./reducers/usersViewReducer";
 
 const App = () => {
@@ -29,12 +30,7 @@ const App = () => {
       <h2>Blogs</h2>
       {user ? (
         <div>
-          <p>
-            {user.name} logged in{" "}
-            <button id="logout" onClick={() => dispatch(logout())}>
-              Log out
-            </button>
-          </p>
+          <NavigationMenu />
 
           <Routes>
             <Route path="/users/:id" element={<UsersViewSingle />} />
