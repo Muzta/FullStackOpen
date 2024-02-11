@@ -1,13 +1,17 @@
 import { useDispatch, useSelector } from "react-redux";
-import Togglable from "./Togglable.jsx";
-import { likeBlog, deleteBlog } from "../reducers/blogReducer.js";
+import { useParams } from "react-router-dom";
+import { deleteBlog, likeBlog } from "../reducers/blogReducer.js";
 import { createNotification } from "../reducers/notificationReducer.js";
 
-const Blog = ({ blog }) => {
+const Blog = () => {
   const dispatch = useDispatch();
   const loggedUsername = useSelector((state) => state.user.username);
+  const blogs = useSelector((state) => state.blogs);
 
-  const incrementLikes = async (blogObject) => {
+  const blogId = useParams().id;
+  const blog = blogs.find((b) => b.id === blogId);
+
+  const handleLike = (blogObject) => {
     try {
       dispatch(likeBlog(blogObject));
     } catch (error) {
@@ -17,7 +21,7 @@ const Blog = ({ blog }) => {
     }
   };
 
-  const removeBlog = async (blogObject) => {
+  const handleRemove = (blogObject) => {
     if (
       window.confirm(
         `Remove blog "${blogObject.title}" by ${blogObject.author}`
@@ -41,37 +45,32 @@ const Blog = ({ blog }) => {
     }
   };
 
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: "solid",
-    borderWidth: 1,
-    marginBottom: 5,
-  };
+  if (!blog) return null;
 
   return (
-    <div className="blog-data" style={blogStyle}>
-      {blog.title} <i>{blog.author}</i>
-      <Togglable buttonLabel="View" hideLabel="Hide">
-        <div className="blog-content">
-          {blog.url}
-          <br></br>
-          Likes {blog.likes}{" "}
-          <button className="like-button" onClick={() => incrementLikes(blog)}>
-            Like
+    <div className="blog-data">
+      <h2>
+        {blog.title} <i>{blog.author}</i>
+      </h2>
+      <div className="blog-content">
+        {blog.url}
+        <br></br>
+        {blog.likes} Likes{" "}
+        <button className="like-button" onClick={() => handleLike(blog)}>
+          Like
+        </button>
+        <br></br>
+        Added by {blog.user.name}
+        <br></br>
+        {loggedUsername === blog.user.username ? (
+          <button className="remove-button" onClick={() => handleRemove(blog)}>
+            Remove
           </button>
-          <br></br>
-          {blog.user.name}
-          <br></br>
-          {loggedUsername === blog.user.username ? (
-            <button className="remove-button" onClick={() => removeBlog(blog)}>
-              Remove
-            </button>
-          ) : null}
-        </div>
-      </Togglable>
+        ) : null}
+      </div>
     </div>
   );
+  // }
 };
 
 export default Blog;
