@@ -31,4 +31,10 @@ const deleteBlog = async (blog) => {
   return response.data;
 };
 
-export default { getAll, addBlog, setToken, likeBlog, deleteBlog };
+const addComment = async (blogId, comment) => {
+  const commentUrl = `${baseUrl}/${blogId}/comments`;
+  const response = await axios.post(commentUrl, comment, config);
+  return response.data;
+};
+
+export default { getAll, addBlog, setToken, likeBlog, deleteBlog, addComment };

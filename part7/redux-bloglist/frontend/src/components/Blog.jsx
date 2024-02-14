@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { deleteBlog, likeBlog } from "../reducers/blogReducer.js";
 import { createNotification } from "../reducers/notificationReducer.js";
+import Comments from "./Comments.jsx";
 
 const Blog = () => {
   const dispatch = useDispatch();
@@ -67,6 +68,7 @@ const Blog = () => {
             Remove
           </button>
         ) : null}
+        <Comments blog={blog} />
       </div>
     </div>
   );

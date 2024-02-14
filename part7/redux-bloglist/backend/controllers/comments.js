@@ -22,7 +22,9 @@ commentsRouter.post(
     const result = await newComment.save();
     blog.comments.push(result._id);
     // With lean() method, save() function can't be called; it has to be handled this way
-    await Blog.findByIdAndUpdate(blogId, { comments: blog.comments });
+    await Blog.findByIdAndUpdate(blogId, {
+      comments: blog.comments,
+    });
     response.status(201).json(result);
   }
 );
