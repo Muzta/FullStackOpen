@@ -17,4 +17,16 @@ blogSchema.set("toJSON", {
   },
 });
 
+// Define a pre-remove hook to remove associated comments
+blogSchema.pre(
+  // Trigger each time deleteOne method is called
+  "deleteOne",
+  // Ensure the deleteOne hook applies to document-level operations (instances), not query-level ones.
+  { document: true, query: false },
+  async function () {
+    const Comment = require("./comment");
+    await Comment.deleteMany({ _id: { $in: this.comments } });
+  }
+);
+
 module.exports = mongoose.model("Blog", blogSchema);

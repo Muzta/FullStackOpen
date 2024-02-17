@@ -84,8 +84,8 @@ export const deleteBlog = (blog) => {
 
 export const addComment = (blogId, comment) => {
   return async (dispatch) => {
-    await blogService.addComment(blogId, comment);
-    dispatch(addCommentById({ blogId, comment }));
+    const newComment = await blogService.addComment(blogId, comment);
+    dispatch(addCommentById({ blogId, comment: newComment }));
   };
 };
 
