@@ -27,26 +27,27 @@ const App = () => {
   return (
     <div>
       <Notification />
-      <h2>Blogs</h2>
+      <h2 className="text-center font-bold text-2xl p-2">Blogs</h2>
       {user ? (
         <div>
           <NavigationMenu />
-
-          <Routes>
-            <Route path="/users/:id" element={<UsersViewSingle />} />
-            <Route path="/blogs/:id" element={<Blog />} />
-            <Route path="/users" element={<UsersViewAll />} />
-            <Route
-              path="/blogs"
-              element={
-                <>
-                  <BlogForm />
-                  <BlogList />
-                </>
-              }
-            />
-            <Route path="" element={<></>} />
-          </Routes>
+          <div className="px-4 py-2">
+            <Routes>
+              <Route path="/users/:id" element={<UsersViewSingle />} />
+              <Route path="/blogs/:id" element={<Blog />} />
+              <Route path="/users" element={<UsersViewAll />} />
+              <Route
+                path="/blogs"
+                element={
+                  <>
+                    <BlogForm />
+                    <BlogList />
+                  </>
+                }
+              />
+              <Route path="" element={<></>} />
+            </Routes>
+          </div>
         </div>
       ) : (
         <LoginForm />

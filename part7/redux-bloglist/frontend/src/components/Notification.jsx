@@ -4,18 +4,12 @@ const Notification = () => {
   const notification = useSelector((state) => state.notification);
 
   if (notification) {
-    const notificationStyle = {
-      color: notification.error ? "red" : "green",
-      background: "lightgrey",
-      fontSize: 20,
-      borderStyle: "solid",
-      borderRadius: 5,
-      padding: 10,
-      marginBottom: 10,
-    };
-
     return (
-      <div className="notification" style={notificationStyle}>
+      <div
+        className={`${
+          notification.error ? "bg-red-600" : "bg-lime-600"
+        } size-fit text-white mx-4 mt-4 border-solid rounded-lg border-gray-300 p-4`}
+      >
         {notification.message}
       </div>
     );

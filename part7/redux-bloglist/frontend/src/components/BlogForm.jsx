@@ -49,6 +49,7 @@ const BlogForm = () => {
           <div>
             Title:
             <input
+              className="m-1"
               type="text"
               value={newBlog.title}
               name="title"
@@ -61,6 +62,7 @@ const BlogForm = () => {
           <div>
             Author:
             <input
+              className="m-1"
               type="text"
               value={newBlog.author}
               name="author"
@@ -72,6 +74,7 @@ const BlogForm = () => {
           <div>
             Url:
             <input
+              className="m-1"
               type="url"
               value={newBlog.url}
               name="url"
@@ -81,7 +84,11 @@ const BlogForm = () => {
             ></input>
           </div>
 
-          <button id="create" type="submit">
+          <button
+            className="like-button text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-1.5 my-1.5 text-center"
+            id="create"
+            type="submit"
+          >
             Create
           </button>
         </form>
