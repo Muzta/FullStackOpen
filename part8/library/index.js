@@ -1,5 +1,6 @@
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
+const ld = require("lodash");
 
 let authors = [
   {
@@ -116,7 +117,7 @@ const typeDefs = `
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String): [Book!]!
+    allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
   }
 `;
@@ -125,8 +126,13 @@ const resolvers = {
   Query: {
     bookCount: () => books.length,
     authorCount: () => authors.length,
-    allBooks: (root, args) =>
-      args.author ? books.filter((book) => book.author === args.author) : books,
+    allBooks: (root, { author, genre }) =>
+      books.filter(
+        (book) =>
+          // In case no param is given, avoid that filter
+          (!author || book.author === author) &&
+          (!genre || book.genres.includes(genre))
+      ),
     allAuthors: () =>
       authors.map((author) => ({
         ...author,
