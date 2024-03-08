@@ -1,10 +1,11 @@
 import { useQuery } from "@apollo/client";
 import { ALL_AUTHORS } from "../queries";
+import UpdateAuthorYear from "./UpdateAuthorYear";
 
-const Authors = (props) => {
+const Authors = ({ show, setError }) => {
   const result = useQuery(ALL_AUTHORS);
 
-  if (!props.show) return null;
+  if (!show) return null;
 
   if (result.loading) return <div>Loading...</div>;
 
@@ -29,6 +30,7 @@ const Authors = (props) => {
           ))}
         </tbody>
       </table>
+      <UpdateAuthorYear setError={setError} />
     </div>
   );
 };
