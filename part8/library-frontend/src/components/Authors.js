@@ -30,7 +30,10 @@ const Authors = ({ show, setError }) => {
           ))}
         </tbody>
       </table>
-      <UpdateAuthorYear setError={setError} />
+      <UpdateAuthorYear
+        setError={setError}
+        authorNames={authors.map((author) => author.name)}
+      />
     </div>
   );
 };
