@@ -158,7 +158,7 @@ const resolvers = {
       books = books.concat(newBook);
       const author = { name: args.author };
       if (!authors.find((a) => a.name === author.name))
-        authors = authors.concat(author);
+        authors = authors.concat({ ...author, id: uuid() });
       return newBook;
     },
     editAuthor: (root, { name, setBornTo }) => {
