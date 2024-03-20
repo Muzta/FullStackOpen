@@ -21,9 +21,12 @@ const UpdateAuthorYear = ({ setError, authorNames }) => {
 
   const submit = (event) => {
     event.preventDefault();
-    updateBirthyear({ variables: { name, year: Number(birthyear) } });
-    setBirthyear("");
-    setName("");
+    if (!name) setError("Select an author");
+    else {
+      updateBirthyear({ variables: { name, year: Number(birthyear) } });
+      setBirthyear("");
+      setName("");
+    }
   };
 
   return (

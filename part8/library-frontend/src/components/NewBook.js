@@ -18,7 +18,7 @@ const NewBook = ({ show, setError }) => {
       setTitle("");
       setPublished("");
       setAuthor("");
-      setGenres([]);
+      setGenres(null);
       setGenre("");
     },
     refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
@@ -28,9 +28,11 @@ const NewBook = ({ show, setError }) => {
 
   const submit = async (event) => {
     event.preventDefault();
-    createBook({
-      variables: { title, author, published: Number(published), genres },
-    });
+    if (!genres) setError("At least 1 genre has to be added");
+    else
+      createBook({
+        variables: { title, author, published: Number(published), genres },
+      });
   };
 
   const addGenre = () => {
