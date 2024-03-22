@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 const Book = require("./models/book");
 const Author = require("./models/author");
+const { GraphQLError } = require("graphql");
 require("dotenv").config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -80,14 +81,75 @@ const resolvers = {
   },
   Mutation: {
     addBook: async (root, args) => {
+      // Validation of the book's author data
       let author = await Author.findOne({ name: args.author });
       if (!author) {
         author = new Author({ name: args.author });
-        await author.save();
+        try {
+          await author.save();
+        } catch (error) {
+          if (error.name === "ValidationError") {
+            if (error.errors.name && error.errors.name.kind === "minlength")
+              throw new GraphQLError(
+                "Author name is too short (4 characters min)",
+                {
+                  extensions: {
+                    code: "BAD_USER_INPUT",
+                  },
+                }
+              );
+            else
+              throw new GraphQLError("Validation error occurred", {
+                extensions: {
+                  code: "BAD_USER_INPUT",
+                  error: error.errors,
+                },
+              });
+          } else
+            throw new GraphQLError("Saving new author failed", {
+              extensions: {
+                code: "INTERNAL_SERVER_ERROR",
+                error: error.message,
+              },
+            });
+        }
       }
+
       const newBook = new Book({ ...args, author: author._id });
 
-      await newBook.save();
+      // Validation of the book data
+      try {
+        await newBook.save();
+      } catch (error) {
+        if (error.name === "ValidationError") {
+          if (error.errors.title && error.errors.title.kind === "minlength")
+            throw new GraphQLError("Title is too short (5 characters min)", {
+              extensions: {
+                code: "BAD_USER_INPUT",
+              },
+            });
+          else if (error.errors.title && error.errors.title.kind === "unique")
+            throw new GraphQLError("Title must be unique", {
+              extensions: {
+                code: "BAD_USER_INPUT",
+              },
+            });
+          else
+            throw new GraphQLError("Validation error occurred", {
+              extensions: {
+                code: "BAD_USER_INPUT",
+                error: error.errors,
+              },
+            });
+        } else
+          throw new GraphQLError("Saving new book failed", {
+            extensions: {
+              code: "INTERNAL_SERVER_ERROR",
+              error: error.message,
+            },
+          });
+      }
+
       return newBook.populate("author");
     },
     editAuthor: async (root, { name, setBornTo }) => {

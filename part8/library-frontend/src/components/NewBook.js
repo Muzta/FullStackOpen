@@ -51,6 +51,7 @@ const NewBook = ({ show, setError }) => {
           <input
             required
             value={title}
+            minLength="5"
             onChange={({ target }) => setTitle(target.value)}
           />
         </div>
@@ -59,6 +60,7 @@ const NewBook = ({ show, setError }) => {
           <input
             required
             value={author}
+            minLength="4"
             onChange={({ target }) => setAuthor(target.value)}
           />
         </div>
