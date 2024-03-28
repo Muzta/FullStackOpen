@@ -7,7 +7,12 @@ const UpdateAuthorYear = ({ setError, authorNames }) => {
   const [birthyear, setBirthyear] = useState("");
   const [name, setName] = useState("");
 
-  const [updateBirthyear, result] = useMutation(UPDATE_BIRTHYEAR);
+  const [updateBirthyear, result] = useMutation(UPDATE_BIRTHYEAR, {
+    onError: (error) => {
+      const messages = error.graphQLErrors.map((e) => e.message).join("\n");
+      setError(messages);
+    },
+  });
 
   const authorSelectOptions = authorNames.map((name) => ({
     value: name,

@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client";
 import { ALL_AUTHORS } from "../queries";
 import UpdateAuthorYear from "./UpdateAuthorYear";
 
-const Authors = ({ show, setError }) => {
+const Authors = ({ show, setError, token }) => {
   const result = useQuery(ALL_AUTHORS);
 
   if (!show) return null;
@@ -33,10 +33,12 @@ const Authors = ({ show, setError }) => {
             </tbody>
           </table>
 
-          <UpdateAuthorYear
-            setError={setError}
-            authorNames={authors.map((author) => author.name)}
-          />
+          {token && (
+            <UpdateAuthorYear
+              setError={setError}
+              authorNames={authors.map((author) => author.name)}
+            />
+          )}
         </>
       )}
     </div>
