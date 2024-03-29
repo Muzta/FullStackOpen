@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import NewBook from "./components/NewBook";
 import Notification from "./components/Notification";
 import { useApolloClient } from "@apollo/client";
+import RecommendedBooks from "./components/RecommendedBooks";
 
 const App = () => {
   const [page, setPage] = useState("authors");
@@ -32,6 +33,7 @@ const App = () => {
         {token ? (
           <>
             <button onClick={() => setPage("add")}>add book</button>
+            <button onClick={() => setPage("recommended")}>recommended</button>
             <button onClick={() => logout()}>logout</button>
           </>
         ) : (
@@ -47,7 +49,10 @@ const App = () => {
 
       <Books show={page === "books"} />
       {token ? (
-        <NewBook show={page === "add"} setError={createErrorMessage} />
+        <>
+          <NewBook show={page === "add"} setError={createErrorMessage} />
+          <RecommendedBooks show={page === "recommended"} />
+        </>
       ) : (
         <Login
           show={page === "login"}
