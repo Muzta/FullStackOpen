@@ -1,29 +1,33 @@
 import { useQuery } from "@apollo/client";
-import { ALL_BOOKS } from "../queries";
+import { useEffect, useRef, useState } from "react";
 import Select from "react-select";
-import { useState } from "react";
+import { ALL_BOOKS } from "../queries";
 
-const Books = (props) => {
-  const [selectedGenre, setSelectedGenre] = useState("");
-  const { loading, data } = useQuery(ALL_BOOKS);
+const Books = ({ show }) => {
+  const { loading, data, refetch } = useQuery(ALL_BOOKS);
+  const [currentOption, setCurrentOption] = useState("");
+  const genresRef = useRef([]);
 
-  if (!props.show) return null;
+  // Persists all the genre in the db so they dont change whenever a new query is done
+  useEffect(() => {
+    if (genresRef.current.length === 0 && data) {
+      const removeDuplicates = (array) => [...new Set(array)];
+
+      const allGenres = removeDuplicates(
+        data.allBooks.flatMap((book) => book.genres)
+      );
+
+      genresRef.current = [
+        { value: "", label: "All genres" },
+        ...allGenres.map((genre) => ({ value: genre, label: genre })),
+      ];
+    }
+  }, [data]);
+
+  if (!show) return null;
   if (loading) return <div>Loading...</div>;
 
   const books = data.allBooks;
-
-  const removeDuplicates = (array) => [...new Set(array)];
-
-  const booksToShow = selectedGenre
-    ? books.filter((book) => book.genres.includes(selectedGenre))
-    : books;
-
-  const allGenres = removeDuplicates(books.flatMap((book) => book.genres));
-
-  const genreSelectOptions = [
-    { value: "", label: "All genres" },
-    ...allGenres.map((genre) => ({ value: genre, label: genre })),
-  ];
 
   return (
     <div>
@@ -32,9 +36,15 @@ const Books = (props) => {
       <Select
         required
         isSearchable={true}
-        options={genreSelectOptions}
-        onChange={(selectedOption) => setSelectedGenre(selectedOption.value)}
-        defaultValue={genreSelectOptions[0]}
+        options={genresRef.current}
+        onChange={(selectedOption) => {
+          // Prevent refetching on the same selection
+          if (selectedOption.value !== currentOption) {
+            refetch({ genre: selectedOption.value });
+            setCurrentOption(selectedOption.value);
+          }
+        }}
+        defaultValue={genresRef.current[0]}
       />
 
       {books.length !== 0 && (
@@ -46,7 +56,7 @@ const Books = (props) => {
               <th>genres</th>
               <th>published</th>
             </tr>
-            {booksToShow.map((a) => (
+            {books.map((a) => (
               <tr key={a.title}>
                 <td>{a.title}</td>
                 <td>{a.author.name}</td>
