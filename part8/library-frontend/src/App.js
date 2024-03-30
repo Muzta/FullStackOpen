@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Authors from "./components/Authors";
 import Books from "./components/Books";
 import Login from "./components/Login";
@@ -11,6 +11,7 @@ const App = () => {
   const [page, setPage] = useState("authors");
   const [errorMessage, setErrorMessage] = useState(null);
   const [token, setToken] = useState(null);
+  const genresRef = useRef();
   const client = useApolloClient();
 
   const createErrorMessage = (message) => {
@@ -47,10 +48,14 @@ const App = () => {
         token={token}
       />
 
-      <Books show={page === "books"} />
+      <Books show={page === "books"} ref={genresRef} />
       {token ? (
         <>
-          <NewBook show={page === "add"} setError={createErrorMessage} />
+          <NewBook
+            show={page === "add"}
+            setError={createErrorMessage}
+            genresRef={genresRef}
+          />
           <RecommendedBooks show={page === "recommended"} />
         </>
       ) : (

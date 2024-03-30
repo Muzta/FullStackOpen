@@ -2,7 +2,7 @@ import { useMutation } from "@apollo/client";
 import { useState } from "react";
 import { ADD_BOOK, ALL_AUTHORS, ALL_BOOKS } from "../queries";
 
-const NewBook = ({ show, setError }) => {
+const NewBook = ({ show, setError, genresRef }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [published, setPublished] = useState("");
@@ -15,6 +15,7 @@ const NewBook = ({ show, setError }) => {
       setError(messages);
     },
     onCompleted: () => {
+      genresRef.current.addNewGenres(genres);
       setTitle("");
       setPublished("");
       setAuthor("");

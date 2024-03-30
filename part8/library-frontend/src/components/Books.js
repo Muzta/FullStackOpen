@@ -1,9 +1,15 @@
 import { useQuery } from "@apollo/client";
-import { useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import Select from "react-select";
 import { ALL_BOOKS } from "../queries";
 
-const Books = ({ show }) => {
+const Books = forwardRef(({ show }, refs) => {
   const { loading, data, refetch } = useQuery(ALL_BOOKS);
   const [currentOption, setCurrentOption] = useState("");
   const genresRef = useRef([]);
@@ -23,6 +29,25 @@ const Books = ({ show }) => {
       ];
     }
   }, [data]);
+
+  useImperativeHandle(refs, () => {
+    return {
+      addNewGenres(genres) {
+        // Get only genres which are truly new on the DB
+        const filteredNewGenres = genres.filter(
+          (genre) => !genresRef.current.some((g) => g.value === genre)
+        );
+
+        // Create a new dict from each one to be added to the select options
+        const newGenresDict = filteredNewGenres.map((genre) => ({
+          value: genre,
+          label: genre,
+        }));
+
+        genresRef.current = [...genresRef.current, ...newGenresDict];
+      },
+    };
+  });
 
   if (!show) return null;
   if (loading) return <div>Loading...</div>;
@@ -69,6 +94,6 @@ const Books = ({ show }) => {
       )}
     </div>
   );
-};
+});
 
 export default Books;
