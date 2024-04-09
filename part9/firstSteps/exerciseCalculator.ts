@@ -28,7 +28,7 @@ const parseExercisesArguments = (args: string[]): ArgsValues => {
     };
 };
 
-const calculateExercises = (dailyHours: number[], target: number) => {
+const calculateExercises = (dailyHours: number[], target: number): Result => {
   if (dailyHours.some((hour) => isNotNumber(hour)) || isNotNumber(target))
     throw new Error("An array of numbers and a number have to be provided");
 
