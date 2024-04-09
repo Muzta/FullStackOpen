@@ -1,3 +1,5 @@
+import { isNotNumber } from "./utils";
+
 interface Result {
   periodLength: number;
   trainingDays: number;
@@ -8,7 +10,28 @@ interface Result {
   average: number;
 }
 
+interface ArgsValues {
+  dailyHours: number[];
+  target: number;
+}
+
+const parseExercisesArguments = (args: string[]): ArgsValues => {
+  if (args.length < 4)
+    throw new Error("You have to provide at least 4 arguments");
+
+  if (args.slice(2).some((hours) => isNotNumber(hours)))
+    throw new Error("Every argument has to be a number");
+  else
+    return {
+      dailyHours: args.slice(3).map((arg) => Number(arg)),
+      target: Number(args[2]),
+    };
+};
+
 const calculateExercises = (dailyHours: number[], target: number) => {
+  if (dailyHours.some((hour) => isNotNumber(hour)) || isNotNumber(target))
+    throw new Error("An array of numbers and a number have to be provided");
+
   const periodLength = dailyHours.length;
   const trainingDays = dailyHours.filter((day) => day !== 0);
   const trainingHours = trainingDays.reduce(
@@ -31,6 +54,7 @@ const calculateExercises = (dailyHours: number[], target: number) => {
     ratingDescription = "You have not reached your goal";
   }
   const average = trainingHours / periodLength;
+
   return {
     periodLength,
     trainingDays: trainingDays.length,
@@ -42,4 +66,11 @@ const calculateExercises = (dailyHours: number[], target: number) => {
   };
 };
 
-console.log(calculateExercises([3, 0, 2, 4.5, 0, 3, 1], 2));
+try {
+  const { dailyHours, target } = parseExercisesArguments(process.argv);
+  console.log(calculateExercises(dailyHours, target));
+} catch (error: unknown) {
+  let errorMessage = "Something went wrong: ";
+  if (error instanceof Error) errorMessage += error.message;
+  console.log(errorMessage);
+}

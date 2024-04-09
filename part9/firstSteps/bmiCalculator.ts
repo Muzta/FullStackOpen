@@ -1,23 +1,25 @@
+import { isNotNumber } from "./utils";
+
 interface ArgValues {
   height: number;
   weight: number;
 }
 
-const parseArguments = (args: string[]): ArgValues => {
+const parseBmiArguments = (args: string[]): ArgValues => {
   if (args.length !== 4) throw new Error("You have to provide 3 arguments");
 
-  if (isNaN(Number(args[2])) || isNaN(Number(args[3])))
+  if (isNotNumber(args[2]) || isNotNumber(args[3]))
     throw new Error("Provided arguments were not numbers");
   else return { height: Number(args[2]), weight: Number(args[3]) };
 };
 
 const bmiCalculator = (height: number, weight: number): string => {
-  if (isNaN(height) || isNaN(weight))
+  if (isNotNumber(height) || isNotNumber(weight))
     throw new Error("You have to provide numbers");
   if (height === 0) throw new Error("Weight can't be zero");
 
   const bmi = weight / Math.pow(height / 100, 2);
-  if (isNaN(bmi)) throw new Error("Something bad happened!");
+  if (isNotNumber(bmi)) throw new Error("Something bad happened!");
   else if (bmi < 16) return "Underweight (Severe thinness)";
   else if (bmi >= 16 && bmi < 17) return "Underweight (Moderate thinness)";
   else if (bmi >= 17 && bmi < 18.5) return "Underweight (Mild thinness)";
@@ -29,7 +31,7 @@ const bmiCalculator = (height: number, weight: number): string => {
 };
 
 try {
-  const { height, weight } = parseArguments(process.argv);
+  const { height, weight } = parseBmiArguments(process.argv);
   console.log(bmiCalculator(height, weight));
 } catch (error: unknown) {
   let errorMessage = "Something went wrong: ";
