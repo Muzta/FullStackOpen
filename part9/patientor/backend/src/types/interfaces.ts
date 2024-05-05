@@ -1,16 +1,19 @@
 import { Gender } from "./types";
 
-export interface DiagnosisEntry {
+export interface Entry {}
+
+export interface Diagnosis {
   code: string;
   name: string;
   latin?: string;
 }
 
-export interface PatientEntry {
+export interface Patient {
   id: string;
   name: string;
   dateOfBirth: string;
   ssn: string;
   gender: Gender;
   occupation: string;
+  entries: Entry[];
 }

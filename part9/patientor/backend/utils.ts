@@ -1,7 +1,12 @@
-import { Gender, NewPatientEntry } from "./src/types/types";
+import { Entry } from "./src/types/interfaces";
+import { Gender, NewPatient } from "./src/types/types";
 
 const isString = (text: unknown): text is string => {
   return typeof text === "string" || text instanceof String;
+};
+
+const isArray = <T>(array: unknown): array is T[] => {
+  return Array.isArray(array);
 };
 
 const isDate = (date: string): boolean => {
@@ -12,6 +17,12 @@ const isGender = (gender: string): gender is Gender => {
   return Object.values(Gender)
     .map((g) => g.toString())
     .includes(gender);
+};
+
+const isEntry = (entry: unknown): entry is Entry => {
+  if (!entry || typeof entry !== "object")
+    throw new Error("Incorrect or missing data");
+  return true;
 };
 
 const parseName = (name: unknown): string => {
@@ -41,7 +52,13 @@ const parseGender = (gender: unknown): Gender => {
   return gender;
 };
 
-const toNewPatientEntry = (object: unknown): NewPatientEntry => {
+const parseEntries = (entries: unknown): Entry[] => {
+  if (!isArray(entries) || !entries.every((entry) => isEntry(entry)))
+    throw new Error("Incorrect or missing entries");
+  return entries as Entry[];
+};
+
+const toNewPatientEntry = (object: unknown): NewPatient => {
   if (!object || typeof object !== "object")
     throw new Error("Incorrect or missing data");
   if (
@@ -49,16 +66,18 @@ const toNewPatientEntry = (object: unknown): NewPatientEntry => {
     !("dateOfBirth" in object) ||
     !("ssn" in object) ||
     !("occupation" in object) ||
-    !("gender" in object)
+    !("gender" in object) ||
+    !("entries" in object)
   )
     throw new Error("Incorrect data: some fields are missing");
 
-  const newEntry: NewPatientEntry = {
+  const newEntry: NewPatient = {
     name: parseName(object.name),
     dateOfBirth: parseDate(object.dateOfBirth),
     ssn: parseSsn(object.ssn),
     occupation: parseOccupation(object.occupation),
     gender: parseGender(object.gender),
+    entries: parseEntries(object.entries),
   };
 
   return newEntry;
