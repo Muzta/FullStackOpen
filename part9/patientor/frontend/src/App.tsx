@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { Button, Container, Divider, Typography } from "@mui/material";
 import axios from "axios";
-import { BrowserRouter as Router, Route, Link, Routes } from "react-router-dom";
-import { Button, Divider, Container, Typography } from '@mui/material';
+import { useEffect, useState } from "react";
+import { Link, Route, Routes } from "react-router-dom";
 
 import { apiBaseUrl } from "./constants";
 import { Patient } from "./types";
 
-import patientService from "./services/patients";
+import PatientDetails from "./components/PatientDetails";
 import PatientListPage from "./components/PatientListPage";
+import patientService from "./services/patients";
 
 const App = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -21,23 +22,31 @@ const App = () => {
     };
     void fetchPatientList();
   }, []);
-  
+
   return (
     <div className="App">
-      <Router>
-        <Container>
-          <Typography variant="h3" style={{ marginBottom: "0.5em" }}>
-            Patientor
-          </Typography>
-          <Button component={Link} to="/" variant="contained" color="primary">
-            Home
-          </Button>
-          <Divider hidden />
-          <Routes>
-            <Route path="/" element={<PatientListPage patients={patients} setPatients={setPatients} />} />
-          </Routes>
-        </Container>
-      </Router>
+      <Container>
+        <Typography variant="h3">Patientor</Typography>
+        <Button
+          component={Link}
+          to="/"
+          variant="contained"
+          color="primary"
+          style={{ margin: "1.5rem 0" }}
+        >
+          Home
+        </Button>
+        <Divider hidden />
+        <Routes>
+          <Route path="/:id" element={<PatientDetails />} />
+          <Route
+            path="/"
+            element={
+              <PatientListPage patients={patients} setPatients={setPatients} />
+            }
+          />
+        </Routes>
+      </Container>
     </div>
   );
 };
