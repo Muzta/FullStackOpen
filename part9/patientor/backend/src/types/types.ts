@@ -1,9 +1,9 @@
 import { Patient } from "./interfaces";
 
 export enum Gender {
-  male = "male",
-  female = "female",
-  other = "other",
+  Male = "male",
+  Female = "female",
+  Other = "other",
 }
 
 export type NonSensitivePatient = Omit<Patient, "ssn" | "entries">;
