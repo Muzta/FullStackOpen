@@ -3,14 +3,17 @@ import patientsData from "../../data/patients";
 import { Patient } from "../types/interfaces";
 import { NewPatient, NonSensitivePatient } from "../types/types";
 
-const patients: Patient[] = patientsData as Patient[];
+const patients: Patient[] = patientsData;
 
 const getEntries = (): Patient[] => {
   return patients;
 };
 
 const getNonSensitiveEntries = (): NonSensitivePatient[] => {
-  return patients.map(({ ssn: _, entries: _unused, ...patient }) => patient);
+  return patients.map(
+    ({ ssn: _ssn, entries: _entries, dateOfBirth: _dateOfBirth, ...patient }) =>
+      patient
+  );
 };
 
 const findById = (id: string): Patient | undefined => {

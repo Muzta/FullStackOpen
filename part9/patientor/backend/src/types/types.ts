@@ -6,6 +6,9 @@ export enum Gender {
   Other = "other",
 }
 
-export type NonSensitivePatient = Omit<Patient, "ssn" | "entries">;
+export type NonSensitivePatient = Omit<
+  Patient,
+  "ssn" | "entries" | "dateOfBirth"
+>;
 
 export type NewPatient = Omit<Patient, "id">;

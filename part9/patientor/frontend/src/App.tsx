@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
 import { apiBaseUrl } from "./constants";
-import { Patient } from "./types";
+import { NonSensitivePatient } from "./types";
 
 import PatientDetails from "./components/PatientDetails";
 import PatientListPage from "./components/PatientListPage";
 import patientService from "./services/patients";
 
 const App = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<NonSensitivePatient[]>([]);
 
   useEffect(() => {
     void axios.get<void>(`${apiBaseUrl}/ping`);
