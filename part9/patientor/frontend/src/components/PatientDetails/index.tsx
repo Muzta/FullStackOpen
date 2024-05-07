@@ -1,4 +1,4 @@
-import { Icon, Typography } from "@mui/material";
+import { Box, Icon, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
 import patientService from "../../services/patients";
@@ -47,6 +47,21 @@ const PatientDetails = () => {
       </Typography>
       <Typography paragraph>ssn: {patient.ssn}</Typography>
       <Typography paragraph>occupation: {patient.occupation}</Typography>
+      <Typography variant="h6">Entries</Typography>
+      {Object.values(patient.entries).map((entry) => (
+        <Box key={entry.id}>
+          <Typography paragraph>
+            {entry.date} <i>{entry.description}</i>
+          </Typography>
+          {entry.diagnosisCodes && (
+            <ul>
+              {Object.values(entry.diagnosisCodes).map((code) => (
+                <li key={code}>{code}</li>
+              ))}
+            </ul>
+          )}
+        </Box>
+      ))}
     </>
   );
 };
