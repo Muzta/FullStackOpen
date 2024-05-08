@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
 import patientService from "../../services/patients";
 import { Diagnosis, Gender, Patient } from "../../types";
-import DiagnosesDetails from "../DiagnosesDetails";
+import EntryDetails from "../EntryDetails";
 
 interface Props {
   diagnoses: Diagnosis[];
@@ -58,16 +58,7 @@ const PatientDetails = ({ diagnoses }: Props) => {
           <Typography variant="h6">Entries</Typography>
           {Object.values(patient.entries).map((entry) => (
             <Box key={entry.id}>
-              <Typography paragraph>
-                {entry.date} <i>{entry.description}</i>
-              </Typography>
-
-              {entry.diagnosisCodes && (
-                <DiagnosesDetails
-                  codes={entry.diagnosisCodes}
-                  diagnoses={diagnoses}
-                />
-              )}
+              <EntryDetails diagnoses={diagnoses} entry={entry} />
             </Box>
           ))}
         </>
