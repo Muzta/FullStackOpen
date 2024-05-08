@@ -1,18 +1,15 @@
-import { Entry } from "./src/types/interfaces";
+import { Diagnosis, Entry } from "./src/types/interfaces";
 import { Gender, NewPatient } from "./src/types/types";
 
 const isString = (text: unknown): text is string => {
   return typeof text === "string" || text instanceof String;
 };
 
-const isArray = <T>(array: unknown): array is T[] => {
-  return Array.isArray(array);
-};
-
 const isDate = (date: string): boolean => {
   return Boolean(Date.parse(date));
 };
 
+// Patient entry utils
 const isGender = (gender: string): gender is Gender => {
   return Object.values(Gender)
     .map((g) => g.toString())
@@ -53,7 +50,7 @@ const parseGender = (gender: unknown): Gender => {
 };
 
 const parseEntries = (entries: unknown): Entry[] => {
-  if (!isArray(entries) || !entries.every((entry) => isEntry(entry)))
+  if (!Array.isArray(entries) || !entries.every((entry) => isEntry(entry)))
     throw new Error("Incorrect or missing entries");
   return entries as Entry[];
 };
@@ -83,4 +80,30 @@ const toNewPatientEntry = (object: unknown): NewPatient => {
   return newEntry;
 };
 
-export default toNewPatientEntry;
+// Diagnosis entry utils
+const parseCode = (code: unknown): string => {
+  if (!isString(code)) throw new Error("Incorrect or missing code");
+  return code;
+};
+
+const parseLatin = (latin: unknown): string => {
+  if (!isString(latin)) throw new Error("Incorrect latin");
+  return latin;
+};
+
+const toNewDiagnosisEntry = (object: unknown): Diagnosis => {
+  if (!object || typeof object !== "object")
+    throw new Error("Incorrect or missing data");
+  if (!("code" in object) || !("name" in object))
+    throw new Error("Incorrect data: some fields are missing");
+
+  const newDiagnosis: Diagnosis = {
+    code: parseCode(object.code),
+    name: parseName(object.name),
+    latin: "latin" in object ? parseLatin(object.latin) : undefined,
+  };
+
+  return newDiagnosis;
+};
+
+export { toNewPatientEntry, toNewDiagnosisEntry };

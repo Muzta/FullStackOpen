@@ -7,4 +7,9 @@ const getEntries = (): Diagnosis[] => {
   return diagnoses;
 };
 
-export default { getEntries };
+const addEntry = (diagnosis: Diagnosis) => {
+  diagnoses.push(diagnosis);
+  return diagnosis;
+};
+
+export default { getEntries, addEntry };

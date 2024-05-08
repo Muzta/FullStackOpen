@@ -4,14 +4,25 @@ import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
 import { apiBaseUrl } from "./constants";
-import { NonSensitivePatient } from "./types";
+import { Diagnosis, NonSensitivePatient } from "./types";
 
 import PatientDetails from "./components/PatientDetails";
 import PatientListPage from "./components/PatientListPage";
 import patientService from "./services/patients";
+import diagnosesService from "./services/diagnoses";
 
 const App = () => {
   const [patients, setPatients] = useState<NonSensitivePatient[]>([]);
+  const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
+
+  // Fetch diagnoses
+  useEffect(() => {
+    const fetchDiagnoses = async () => {
+      const diagnoses = await diagnosesService.getAll();
+      setDiagnoses(diagnoses);
+    };
+    void fetchDiagnoses();
+  }, []);
 
   useEffect(() => {
     void axios.get<void>(`${apiBaseUrl}/ping`);
@@ -38,7 +49,10 @@ const App = () => {
         </Button>
         <Divider hidden />
         <Routes>
-          <Route path="/:id" element={<PatientDetails />} />
+          <Route
+            path="/:id"
+            element={<PatientDetails diagnoses={diagnoses} />}
+          />
           <Route
             path="/"
             element={
