@@ -1,7 +1,11 @@
 import { v1 as uuid } from "uuid";
 import patientsData from "../../data/patients";
 import { Patient } from "../types/interfaces";
-import { NewPatient, NonSensitivePatient } from "../types/types";
+import {
+  EntryWithoutId,
+  NewPatient,
+  NonSensitivePatient,
+} from "../types/types";
 
 const patients: Patient[] = patientsData;
 
@@ -30,4 +34,24 @@ const addEntry = (entry: NewPatient): Patient => {
   return newPatient;
 };
 
-export default { getEntries, getNonSensitiveEntries, addEntry, findById };
+const addPatientEntry = (
+  entry: EntryWithoutId,
+  patientId: string
+): Patient | undefined => {
+  const newPatientEntry = {
+    id: uuid(),
+    ...entry,
+  };
+
+  const patient = patients.find((patient) => patient.id === patientId);
+  patient?.entries.push(newPatientEntry);
+  return patient;
+};
+
+export default {
+  getEntries,
+  getNonSensitiveEntries,
+  addEntry,
+  findById,
+  addPatientEntry,
+};

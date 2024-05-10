@@ -1,8 +1,25 @@
-import { Diagnosis, Entry } from "./src/types/interfaces";
-import { Gender, NewPatient } from "./src/types/types";
+import {
+  BaseEntryWithoutId,
+  Diagnosis,
+  Discharge,
+  Entry,
+} from "./src/types/interfaces";
+import {
+  EntryWithoutId,
+  Gender,
+  HealthCheckRating,
+  NewPatient,
+} from "./src/types/types";
 
 const isString = (text: unknown): text is string => {
-  return typeof text === "string" || text instanceof String;
+  return (
+    (typeof text === "string" || text instanceof String) &&
+    text.trim().length > 0
+  );
+};
+
+const isNumber = (num: unknown): num is number => {
+  return !isNaN(num as number);
 };
 
 const isDate = (date: string): boolean => {
@@ -106,4 +123,127 @@ const toNewDiagnosisEntry = (object: unknown): Diagnosis => {
   return newDiagnosis;
 };
 
-export { toNewPatientEntry, toNewDiagnosisEntry };
+// Patient entries utils
+const isHealthCheckRating = (rating: number): rating is HealthCheckRating => {
+  return Object.values(HealthCheckRating)
+    .map((r) => Number(r))
+    .includes(Number(rating));
+};
+
+const parseDiagnosisCodes = (object: unknown): Array<Diagnosis["code"]> => {
+  if (!object || typeof object !== "object" || !("diagnosisCodes" in object)) {
+    // We will just trust the data to be in correct form
+    return [] as Array<Diagnosis["code"]>;
+  }
+
+  return object.diagnosisCodes as Array<Diagnosis["code"]>;
+};
+
+const parseDescription = (description: unknown): string => {
+  if (!isString(description))
+    throw new Error("Incorrect or missing description");
+  return description;
+};
+
+const parseSpecialist = (specialist: unknown): string => {
+  if (!isString(specialist)) throw new Error("Incorrect or missing specialist");
+  return specialist;
+};
+
+const parseType = (type: unknown): string => {
+  if (!isString(type)) throw new Error(`Incorrect or missing type: ${type}`);
+  return type;
+};
+
+const parseEmployerName = (employerName: unknown): string => {
+  if (!isString(employerName))
+    throw new Error(`Incorrect or missing employer name: ${employerName}`);
+  return employerName;
+};
+
+const parseCriteria = (criteria: unknown): string => {
+  if (!isString(criteria))
+    throw new Error(`Incorrect or missing criteria in discharge: ${criteria}`);
+  return criteria;
+};
+
+const parseDischarge = (dischargeParam: unknown): Discharge => {
+  if (!dischargeParam || typeof dischargeParam !== "object")
+    throw new Error(`Incorrect or missing discharge: ${dischargeParam}`);
+  if (!("date" in dischargeParam) || !("criteria" in dischargeParam))
+    throw new Error("Incorrect data: some fields are missing");
+
+  const discharge: Discharge = {
+    date: parseDate(dischargeParam.date),
+    criteria: parseCriteria(dischargeParam.criteria),
+  };
+
+  return discharge;
+};
+
+const parseHealthCheckRating = (rating: unknown): HealthCheckRating => {
+  if (!isNumber(rating) || !isHealthCheckRating(rating))
+    throw new Error(`Incorrect or missing health check rating: ${rating}`);
+  return rating;
+};
+
+const toNewEntry = (object: unknown): EntryWithoutId => {
+  if (!object || typeof object !== "object")
+    throw new Error("Incorrect or missing data");
+  if (
+    !("description" in object) ||
+    !("date" in object) ||
+    !("specialist" in object) ||
+    !("type" in object)
+  )
+    throw new Error("Incorrect data: some fields are missing");
+
+  const type = parseType(object.type);
+
+  const commonProperties: BaseEntryWithoutId = {
+    description: parseDescription(object.description),
+    date: parseDate(object.date),
+    specialist: parseSpecialist(object.specialist),
+    diagnosisCodes:
+      "diagnosisCodes" in object
+        ? parseDiagnosisCodes(object.diagnosisCodes)
+        : undefined,
+  };
+
+  switch (type) {
+    case "OccupationalHealthcare":
+      if (!("employerName" in object))
+        throw new Error("Incorrect data: some fields are missing");
+
+      return {
+        ...commonProperties,
+        type: type,
+        employerName: parseEmployerName(object.employerName),
+      };
+
+    case "Hospital":
+      if (!("discharge" in object))
+        throw new Error("Incorrect data: some fields are missing");
+
+      return {
+        ...commonProperties,
+        type: type,
+        discharge: parseDischarge(object.discharge),
+      };
+
+    case "HealthCheck":
+      if (!("healthCheckRating" in object))
+        throw new Error("Incorrect data: some fields are missing");
+
+      return {
+        ...commonProperties,
+        type: type,
+        healthCheckRating: parseHealthCheckRating(object.healthCheckRating),
+      };
+
+    default:
+      throw new Error(`Unhandled entry type: ${JSON.stringify(object)}`);
+  }
+};
+
+export { toNewPatientEntry, toNewDiagnosisEntry, toNewEntry };

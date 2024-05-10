@@ -1,4 +1,4 @@
-import { Gender } from "./types";
+import { Gender, HealthCheckRating } from "./types";
 
 interface BaseEntry {
   id: string;
@@ -7,12 +7,9 @@ interface BaseEntry {
   specialist: string;
   diagnosisCodes?: Array<Diagnosis["code"]>;
 }
-export enum HealthCheckRating {
-  "Healthy" = 0,
-  "LowRisk" = 1,
-  "HighRisk" = 2,
-  "CriticalRisk" = 3,
-}
+
+export type BaseEntryWithoutId = Omit<BaseEntry, "id">;
+
 interface HealthCheckEntry extends BaseEntry {
   type: "HealthCheck";
   healthCheckRating: HealthCheckRating;
@@ -29,7 +26,7 @@ interface OccupationalHealthcareEntry extends BaseEntry {
   sickLeave?: SickLeave;
 }
 
-interface Discharge {
+export interface Discharge {
   date: string;
   criteria: string;
 }
