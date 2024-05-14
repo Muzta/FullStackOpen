@@ -2,8 +2,9 @@ import { Box, Icon, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
 import patientService from "../../services/patients";
-import { Diagnosis, Gender, Patient } from "../../types";
+import { Diagnosis, EntryWithoutId, Gender, Patient } from "../../types";
 import EntryDetails from "../EntryDetails";
+import OccupationalHealth from "../EntryForm/OccupationalHealthEntry";
 
 interface Props {
   diagnoses: Diagnosis[];
@@ -19,13 +20,13 @@ const PatientDetails = ({ diagnoses }: Props) => {
 
     const fetchPatient = async () => {
       const id = match.params.id;
-      try {
-        if (id) {
+      if (id) {
+        try {
           const patient = await patientService.getById(id);
           setPatient(patient);
+        } catch (error) {
+          console.error(`Error fetching patient ${id}:`, error);
         }
-      } catch (error) {
-        console.error(`Error fetching patient ${id}:`, error);
       }
     };
 
@@ -33,6 +34,17 @@ const PatientDetails = ({ diagnoses }: Props) => {
   }, [match]);
 
   if (!patient) return <Typography variant="h6">Patient not found</Typography>;
+
+  const createEntry = async (entry: EntryWithoutId) => {
+    const id = match?.params.id;
+    if (id) {
+      try {
+        await patientService.createEntry(id, entry);
+      } catch (error: unknown) {
+        console.error(error);
+      }
+    }
+  };
 
   let genderIcon;
   switch (patient.gender) {
@@ -53,6 +65,7 @@ const PatientDetails = ({ diagnoses }: Props) => {
       </Typography>
       <Typography paragraph>ssn: {patient.ssn}</Typography>
       <Typography paragraph>occupation: {patient.occupation}</Typography>
+      <OccupationalHealth onSubmit={createEntry} />
       {patient.entries.length > 0 && (
         <>
           <Typography variant="h6">Entries</Typography>
