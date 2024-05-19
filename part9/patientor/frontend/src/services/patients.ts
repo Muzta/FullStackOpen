@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  Entry,
   EntryWithoutId,
   NonSensitivePatient,
   Patient,
@@ -28,12 +29,10 @@ const getById = async (id: string) => {
 };
 
 const createEntry = async (id: string, entry: EntryWithoutId) => {
-  console.log("FUNC", entry);
-  const { data } = await axios.post<EntryWithoutId>(
+  const { data } = await axios.post<Entry>(
     `${apiBaseUrl}/patients/${id}/entries`,
     entry
   );
-  console.log("DATA", data);
 
   return data;
 };

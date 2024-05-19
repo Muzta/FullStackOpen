@@ -1,3 +1,4 @@
+import { SelectChangeEvent } from "@mui/material";
 import { useState } from "react";
 
 export const useField = (type: string) => {
@@ -23,4 +24,18 @@ export const useField = (type: string) => {
   };
 
   return { type, value, onChange, resetValue };
+};
+
+export const useSelectField = () => {
+  const [value, setValue] = useState("");
+
+  const onChange = (event: SelectChangeEvent<string>) => {
+    setValue(event.target.value);
+  };
+
+  const resetValue = () => {
+    setValue("");
+  };
+
+  return { value, onChange, resetValue };
 };

@@ -1,18 +1,13 @@
-import {
-  Box,
-  Button,
-  TextField,
-  TextFieldProps,
-  Typography,
-} from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import { useField } from "../../../Hooks";
-import { EntryWithoutId } from "../../../types";
+import { EntryWithoutId, SickLeave } from "../../../types";
+import { textFieldStyle } from "../../../utils";
 
 interface Props {
   onSubmit: (entry: EntryWithoutId) => void;
 }
 
-const OccupationalHealth = ({ onSubmit }: Props) => {
+const OccupationalHealthForm = ({ onSubmit }: Props) => {
   const { resetValue: resetDescription, ...description } = useField("text");
   const { resetValue: resetDate, ...date } = useField("date");
   const { resetValue: resetSpecialist, ...specialist } = useField("text");
@@ -30,13 +25,7 @@ const OccupationalHealth = ({ onSubmit }: Props) => {
   };
 
   const handleSubmit = async (event: React.SyntheticEvent) => {
-    console.log("SUBMITTED");
     event.preventDefault();
-
-    const sickLeave = {
-      startDate: sickLeaveStart.value,
-      endDate: sickLeaveEnd.value,
-    };
 
     const entryToAdd: EntryWithoutId = {
       description: description.value,
@@ -44,22 +33,33 @@ const OccupationalHealth = ({ onSubmit }: Props) => {
       specialist: specialist.value,
       type: "OccupationalHealthcare",
       employerName: employerName.value,
-      sickLeave: sickLeave,
     };
 
+    // Add sickLeave conditionally
+    if (
+      sickLeaveStart.value.trim() !== "" &&
+      sickLeaveEnd.value.trim() !== ""
+    ) {
+      const sickLeave: SickLeave = {
+        startDate: sickLeaveStart.value,
+        endDate: sickLeaveEnd.value,
+      };
+
+      entryToAdd.sickLeave = sickLeave;
+    }
+
     onSubmit(entryToAdd);
+    handleReset();
   };
 
-  const textFieldStyle: TextFieldProps = {
-    variant: "standard",
-    margin: "dense",
-    InputLabelProps: { shrink: true },
-  };
+  const requiredSickLeave =
+    sickLeaveStart.value.trim().length > 0 ||
+    sickLeaveEnd.value.trim().length > 0;
 
   return (
     <>
       <Typography variant="h6" fontWeight="bold">
-        New HealthCheck entry
+        New Occupational Healthcare entry
       </Typography>
       <form
         onSubmit={handleSubmit}
@@ -85,8 +85,18 @@ const OccupationalHealth = ({ onSubmit }: Props) => {
           required
         ></TextField>
         <Typography>Sick leave</Typography>
-        <TextField label="Start" {...sickLeaveStart} {...textFieldStyle} />
-        <TextField label="End" {...sickLeaveEnd} {...textFieldStyle} />
+        <TextField
+          label="Start"
+          {...sickLeaveStart}
+          {...textFieldStyle}
+          required={requiredSickLeave}
+        />
+        <TextField
+          label="End"
+          {...sickLeaveEnd}
+          {...textFieldStyle}
+          required={requiredSickLeave}
+        />
         <Box style={{ display: "flex", justifyContent: "space-between" }}>
           <Button variant="contained" color="secondary" onClick={handleReset}>
             Cancel
@@ -100,4 +110,4 @@ const OccupationalHealth = ({ onSubmit }: Props) => {
   );
 };
 
-export default OccupationalHealth;
+export default OccupationalHealthForm;

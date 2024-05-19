@@ -3,6 +3,7 @@ import {
   Diagnosis,
   Discharge,
   Entry,
+  SickLeave,
 } from "./src/types/interfaces";
 import {
   EntryWithoutId,
@@ -181,6 +182,20 @@ const parseDischarge = (dischargeParam: unknown): Discharge => {
   return discharge;
 };
 
+const parseSickLeave = (sickLeaveParam: unknown): SickLeave => {
+  if (!sickLeaveParam || typeof sickLeaveParam !== "object")
+    throw new Error(`Incorrect or missing sick leave: ${sickLeaveParam}`);
+  if (!("startDate" in sickLeaveParam) || !("endDate" in sickLeaveParam))
+    throw new Error("Incorrect data: some fields are missing");
+
+  const sickLeave: SickLeave = {
+    startDate: parseDate(sickLeaveParam.startDate),
+    endDate: parseDate(sickLeaveParam.endDate),
+  };
+
+  return sickLeave;
+};
+
 const parseHealthCheckRating = (rating: unknown): HealthCheckRating => {
   if (!isNumber(rating) || !isHealthCheckRating(rating))
     throw new Error(`Incorrect or missing health check rating: ${rating}`);
@@ -219,6 +234,8 @@ const toNewEntry = (object: unknown): EntryWithoutId => {
         ...commonProperties,
         type: type,
         employerName: parseEmployerName(object.employerName),
+        sickLeave:
+          "sickLeave" in object ? parseSickLeave(object.sickLeave) : undefined,
       };
 
     case "Hospital":

@@ -1,6 +1,6 @@
 import { v1 as uuid } from "uuid";
 import patientsData from "../../data/patients";
-import { Patient } from "../types/interfaces";
+import { Entry, Patient } from "../types/interfaces";
 import {
   EntryWithoutId,
   NewPatient,
@@ -34,18 +34,18 @@ const addEntry = (entry: NewPatient): Patient => {
   return newPatient;
 };
 
-const addPatientEntry = (
-  entry: EntryWithoutId,
-  patientId: string
-): Patient | undefined => {
-  const newPatientEntry = {
+const addPatientEntry = (entry: EntryWithoutId, patientId: string): Entry => {
+  const newPatientEntry: Entry = {
     id: uuid(),
     ...entry,
   };
 
   const patient = patients.find((patient) => patient.id === patientId);
-  patient?.entries.push(newPatientEntry);
-  return patient;
+
+  if (!patient) throw new Error(`Patient with id ${patientId} not found`);
+  patient.entries = [...patient.entries, newPatientEntry];
+
+  return newPatientEntry;
 };
 
 export default {

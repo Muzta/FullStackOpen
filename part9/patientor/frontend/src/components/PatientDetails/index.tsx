@@ -2,9 +2,9 @@ import { Box, Icon, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useMatch } from "react-router-dom";
 import patientService from "../../services/patients";
-import { Diagnosis, EntryWithoutId, Gender, Patient } from "../../types";
+import { Diagnosis, Entry, EntryWithoutId, Gender, Patient } from "../../types";
 import EntryDetails from "../EntryDetails";
-import OccupationalHealth from "../EntryForm/OccupationalHealthEntry";
+import EntryForm from "../EntryForm";
 
 interface Props {
   diagnoses: Diagnosis[];
@@ -39,7 +39,8 @@ const PatientDetails = ({ diagnoses }: Props) => {
     const id = match?.params.id;
     if (id) {
       try {
-        await patientService.createEntry(id, entry);
+        const newEntry: Entry = await patientService.createEntry(id, entry);
+        setPatient({ ...patient, entries: [...patient.entries, newEntry] });
       } catch (error: unknown) {
         console.error(error);
       }
@@ -65,7 +66,7 @@ const PatientDetails = ({ diagnoses }: Props) => {
       </Typography>
       <Typography paragraph>ssn: {patient.ssn}</Typography>
       <Typography paragraph>occupation: {patient.occupation}</Typography>
-      <OccupationalHealth onSubmit={createEntry} />
+      <EntryForm onSubmit={createEntry} />
       {patient.entries.length > 0 && (
         <>
           <Typography variant="h6">Entries</Typography>
