@@ -131,13 +131,13 @@ const isHealthCheckRating = (rating: number): rating is HealthCheckRating => {
     .includes(Number(rating));
 };
 
-const parseDiagnosisCodes = (object: unknown): Array<Diagnosis["code"]> => {
-  if (!object || typeof object !== "object" || !("diagnosisCodes" in object)) {
+const parseDiagnosisCodes = (array: unknown): Array<Diagnosis["code"]> => {
+  if (!array || !Array.isArray(array) || array.length === 0) {
     // We will just trust the data to be in correct form
     return [] as Array<Diagnosis["code"]>;
   }
 
-  return object.diagnosisCodes as Array<Diagnosis["code"]>;
+  return array as Array<Diagnosis["code"]>;
 };
 
 const parseDescription = (description: unknown): string => {

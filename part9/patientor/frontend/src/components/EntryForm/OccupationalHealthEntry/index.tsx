@@ -1,16 +1,29 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
-import { useField } from "../../../Hooks";
-import { EntryWithoutId, SickLeave } from "../../../types";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useField, useMultipleSelectField } from "../../../Hooks";
+import { Diagnosis, EntryWithoutId, SickLeave } from "../../../types";
 import { textFieldStyle } from "../../../utils";
 
 interface Props {
   onSubmit: (entry: EntryWithoutId) => void;
+  diagnoses: Diagnosis[];
 }
 
-const OccupationalHealthForm = ({ onSubmit }: Props) => {
+const OccupationalHealthForm = ({ onSubmit, diagnoses }: Props) => {
   const { resetValue: resetDescription, ...description } = useField("text");
   const { resetValue: resetDate, ...date } = useField("date");
   const { resetValue: resetSpecialist, ...specialist } = useField("text");
+  const { resetValue: resetDiagnosisCodes, ...diagnosisCodes } =
+    useMultipleSelectField();
   const { resetValue: resetEmployerName, ...employerName } = useField("text");
   const { resetValue: resetSickStart, ...sickLeaveStart } = useField("date");
   const { resetValue: resetSickEnd, ...sickLeaveEnd } = useField("date");
@@ -19,6 +32,7 @@ const OccupationalHealthForm = ({ onSubmit }: Props) => {
     resetDescription(),
       resetDate(),
       resetSpecialist(),
+      resetDiagnosisCodes(),
       resetEmployerName(),
       resetSickStart(),
       resetSickEnd();
@@ -48,10 +62,14 @@ const OccupationalHealthForm = ({ onSubmit }: Props) => {
       entryToAdd.sickLeave = sickLeave;
     }
 
+    if (diagnosisCodes.value && diagnosisCodes.value.length > 0)
+      entryToAdd.diagnosisCodes = diagnosisCodes.value;
+
     onSubmit(entryToAdd);
     handleReset();
   };
 
+  // If a input field of the sick leave is filledInputClasses, the other is required
   const requiredSickLeave =
     sickLeaveStart.value.trim().length > 0 ||
     sickLeaveEnd.value.trim().length > 0;
@@ -78,6 +96,23 @@ const OccupationalHealthForm = ({ onSubmit }: Props) => {
           {...textFieldStyle}
           required
         />
+        <FormControl fullWidth>
+          <InputLabel id="diagnosis-codes">Diagnosis codes</InputLabel>
+          <Select
+            labelId="diagnosis-codes"
+            multiple
+            value={diagnosisCodes.value}
+            onChange={diagnosisCodes.onChange}
+            input={<OutlinedInput label="Diagnosis codes" />}
+          >
+            {diagnoses.map((diagnosis) => (
+              <MenuItem key={diagnosis.code} value={diagnosis.code}>
+                {diagnosis.code}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <TextField
           label="Employer name"
           {...employerName}

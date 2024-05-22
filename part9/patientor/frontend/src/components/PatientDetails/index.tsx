@@ -66,7 +66,7 @@ const PatientDetails = ({ diagnoses }: Props) => {
       </Typography>
       <Typography paragraph>ssn: {patient.ssn}</Typography>
       <Typography paragraph>occupation: {patient.occupation}</Typography>
-      <EntryForm onSubmit={createEntry} />
+      <EntryForm onSubmit={createEntry} diagnoses={diagnoses} />
       {patient.entries.length > 0 && (
         <>
           <Typography variant="h6">Entries</Typography>

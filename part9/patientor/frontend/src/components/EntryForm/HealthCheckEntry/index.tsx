@@ -1,24 +1,33 @@
 import {
   Box,
   Button,
+  FormControl,
+  InputLabel,
   MenuItem,
+  OutlinedInput,
   Select,
   TextField,
   Typography,
 } from "@mui/material";
-import { useField, useSelectField } from "../../../Hooks";
-import { healthCheckRatingEntries } from "../../../utils";
-import { textFieldStyle } from "../../../utils";
-import { EntryWithoutId, HealthCheckRating } from "../../../types";
+import {
+  useField,
+  useMultipleSelectField,
+  useSelectField,
+} from "../../../Hooks";
+import { Diagnosis, EntryWithoutId, HealthCheckRating } from "../../../types";
+import { healthCheckRatingEntries, textFieldStyle } from "../../../utils";
 
 interface Props {
   onSubmit: (entry: EntryWithoutId) => void;
+  diagnoses: Diagnosis[];
 }
 
-const HealthCheckForm = ({ onSubmit }: Props) => {
+const HealthCheckForm = ({ onSubmit, diagnoses }: Props) => {
   const { resetValue: resetDescription, ...description } = useField("text");
   const { resetValue: resetDate, ...date } = useField("date");
   const { resetValue: resetSpecialist, ...specialist } = useField("text");
+  const { resetValue: resetDiagnosisCodes, ...diagnosisCodes } =
+    useMultipleSelectField();
   const { resetValue: resetHealthCheckRating, ...healthCheckRating } =
     useSelectField();
 
@@ -26,7 +35,8 @@ const HealthCheckForm = ({ onSubmit }: Props) => {
     resetDescription(),
       resetDate(),
       resetSpecialist(),
-      resetHealthCheckRating();
+      resetHealthCheckRating(),
+      resetDiagnosisCodes();
   };
 
   const handleSubmit = async (event: React.SyntheticEvent) => {
@@ -44,6 +54,9 @@ const HealthCheckForm = ({ onSubmit }: Props) => {
       type: "HealthCheck",
       healthCheckRating: healthCheckRatingValue,
     };
+
+    if (diagnosisCodes.value && diagnosisCodes.value.length > 0)
+      entryToAdd.diagnosisCodes = diagnosisCodes.value;
 
     onSubmit(entryToAdd);
     handleReset();
@@ -71,23 +84,38 @@ const HealthCheckForm = ({ onSubmit }: Props) => {
           {...textFieldStyle}
           required
         />
+        <FormControl fullWidth>
+          <InputLabel id="diagnosis-codes">Diagnosis codes</InputLabel>
+          <Select
+            labelId="diagnosis-codes"
+            multiple
+            value={diagnosisCodes.value}
+            onChange={diagnosisCodes.onChange}
+            input={<OutlinedInput label="Diagnosis codes" />}
+          >
+            {diagnoses.map((diagnosis) => (
+              <MenuItem key={diagnosis.code} value={diagnosis.code}>
+                {diagnosis.code}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <Select
-          displayEmpty
-          value={healthCheckRating.value}
-          onChange={healthCheckRating.onChange}
-          inputProps={{ "aria-label": "Without label" }}
-          required
-        >
-          <MenuItem disabled value="">
-            <em>Health Check Rating</em>
-          </MenuItem>
-          {healthCheckRatingEntries.map(([key, value]) => (
-            <MenuItem key={key} value={value}>
-              {key}
-            </MenuItem>
-          ))}
-        </Select>
+        <FormControl fullWidth required>
+          <InputLabel id="health-check-form">Health Check rating</InputLabel>
+          <Select
+            labelId="health-check-form"
+            value={healthCheckRating.value}
+            onChange={healthCheckRating.onChange}
+            input={<OutlinedInput label="Health Check rating" />}
+          >
+            {healthCheckRatingEntries.map(([key, value]) => (
+              <MenuItem key={key} value={value}>
+                {key}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         <Box style={{ display: "flex", justifyContent: "space-between" }}>
           <Button variant="contained" color="secondary" onClick={handleReset}>

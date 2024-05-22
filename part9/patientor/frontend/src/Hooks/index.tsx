@@ -39,3 +39,23 @@ export const useSelectField = () => {
 
   return { value, onChange, resetValue };
 };
+
+export const useMultipleSelectField = () => {
+  const [valueField, setValueField] = useState<string[]>([]);
+
+  const onChange = (event: SelectChangeEvent<typeof valueField>) => {
+    const {
+      target: { value },
+    } = event;
+    setValueField(
+      // On autofill we get a stringified value.
+      typeof value === "string" ? value.split(",") : value
+    );
+  };
+
+  const resetValue = () => {
+    setValueField([]);
+  };
+
+  return { value: valueField, onChange, resetValue };
+};

@@ -16,7 +16,7 @@ const DiagnosisDetails = ({ codes, diagnoses }: Props) => {
     .map((code) => diagnoses.find((diagnosis) => diagnosis.code === code))
     .filter(isValidDiagnosis);
 
-  if (!filteredEntries) return null;
+  if (!filteredEntries || filteredEntries.length === 0) return null;
 
   return (
     <ul>
